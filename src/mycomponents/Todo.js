@@ -65,8 +65,8 @@ const Todo = () => {
     const getAllList = async () => {
         const response = await getList();
         // console.log(response.data);
-        const revData = response.data.reverse();
-        setList(revData);
+        // const revData = response.data.reverse();
+        setList(response.data);
     }
 
     const deleteitem = async (id) => {
