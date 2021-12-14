@@ -52,7 +52,9 @@ const Todo = () => {
     const [loading, setLoading] = useState(true);
     const [btnLoading, setBtnLoading] = useState([]);
     const [createTaskLoading, setCreateTaskLoading] = useState(false);
-    const [delTaskLoading, setDelTaskLoading] = useState(false);
+    // const [delTaskLoading, setDelTaskLoading] = useState(false);
+    const [delTaskLoading, setDelTaskLoading] = useState([]);
+
     const [saveEditTaskLoading, setSaveEditTaskLoading] = useState(false);
 
     const handleClose = () => setShow(false);
@@ -79,12 +81,18 @@ const Todo = () => {
         setList(response.data);
     }
 
-    const deleteitem = async (id) => {
-        setDelTaskLoading(true);
+    const deleteitem = async (id, i) => {
+        // setDelTaskLoading(true);
+        let isDelloading = delTaskLoading.slice();
+        isDelloading[i] = true;
+        setDelTaskLoading(isDelloading);
         await deleteItem(id).then(
             async (result) => {
                 getAllList().then(() => {
-                    setDelTaskLoading(false);
+                    // setDelTaskLoading(false);
+                    let isDelloading = delTaskLoading.slice();
+                    isDelloading[i] = false;
+                    setDelTaskLoading(isDelloading);
                 });
             } 
         );
@@ -296,14 +304,14 @@ const Todo = () => {
                                 </Table>
                                 </Card.Text>
 
-                                    {delTaskLoading 
+                                    {delTaskLoading[i] 
                                     ?
                                         <Button style={{marginRight: "0.8rem", float: "right"}} variant="danger" disabled>
                                             <ClipLoader loading={delTaskLoading} speedMultiplier={2} color={"white"} css={btnoverride} size={17} />
                                             <i className="fas fa-trash"></i>
                                         </Button>
                                     :
-                                        <Button style={{marginRight: "0.8rem", float: "right"}} variant="danger" onClick={() => deleteitem(list._id)}>
+                                        <Button style={{marginRight: "0.8rem", float: "right"}} variant="danger" onClick={() => deleteitem(list._id, i)}>
                                             <i className="fas fa-trash"></i>
                                         </Button>
                                     }
