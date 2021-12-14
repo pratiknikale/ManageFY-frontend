@@ -201,7 +201,7 @@ const Todo = () => {
     const toggleStatus = async (e, id, sTsk, i) => {     //REVISIT .......can be better
         
         let isloading = btnLoading.slice();
-        isloading[i] = true;
+        isloading[id + i] = true;
         setBtnLoading(isloading);
 
         if(sTsk[e.target.id].status === "pending"){
@@ -212,7 +212,7 @@ const Todo = () => {
             updateStatus(id, StatusNew, STaskNew ).then(() => {
                 getAllList().then(() => {
                     let isloading = btnLoading.slice();
-                    isloading[i] = false;
+                    isloading[id + i] = false;
                     setBtnLoading(isloading);
                 });
             });
@@ -225,7 +225,7 @@ const Todo = () => {
             updateStatus(id, StatusNew, STaskNew ).then(() => {
                 getAllList().then(() => {
                     let isloading = btnLoading.slice();
-                    isloading[i] = false;
+                    isloading[id + i] = false;
                     setBtnLoading(isloading);
                 });
             });
@@ -279,7 +279,7 @@ const Todo = () => {
                                         <td>{subTask.stask}</td>
                                         <td className={`text-${subTask.status === "done" ? "success" : "warning"}`}>{subTask.status === "done" ? <i class="far fa-check-circle mr-2"></i> : <i class="fas fa-exclamation-circle mr-2"></i> }{subTask.status}</td>
                                         <td>
-                                        {btnLoading[i] ? 
+                                        {btnLoading[list._id + i] ? 
                                             <Button style={{float: "right", display: "flex", alignItems: "center"}} variant={`${subTask.status === "done" ? "success" : "warning"}`} disabled><ClipLoader loading={btnLoading} speedMultiplier={2} color={"white"} css={btnoverride} size={17} />Mark as {subTask.status === "done" ? "pending" : "done"}</Button>
                                         :
                                             <Button id={`${i}`} name="status" style={{float: "right"}} onClick={(e) => toggleStatus(e, list._id, list.sub_tasks, i)} variant={`${subTask.status === "done" ? "success" : "warning"}`} >Mark as {subTask.status === "done" ? "pending" : "done"}</Button> 
