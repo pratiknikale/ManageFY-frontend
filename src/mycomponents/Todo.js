@@ -14,6 +14,7 @@ import FormControl from 'react-bootstrap/FormControl'
 import moment from 'moment';
 import { css } from "@emotion/react";
 import ClockLoader from "react-spinners/ClockLoader";
+import ClipLoader from "react-spinners/ClipLoader";
 // import { Scrollbar } from "react-scrollbars-custom";
 
 const initialCreateValue = {
@@ -34,6 +35,11 @@ const override = css`
   
 `;
 
+const btnoverride = css`
+  display: inline-block;
+  margin-right: 6px;
+`;
+
 const Todo = () => {
     
     const [lists, setList] = useState([]);
@@ -44,6 +50,10 @@ const Todo = () => {
     const [Etask, setETask] = useState(initialEditValue);
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [btnLoading, setBtnLoading] = useState([]);
+    const [createTaskLoading, setCreateTaskLoading] = useState(false);
+    const [delTaskLoading, setDelTaskLoading] = useState(false);
+    const [saveEditTaskLoading, setSaveEditTaskLoading] = useState(false);
 
     const handleClose = () => setShow(false);
     const handleShow = async (id) => {
@@ -70,9 +80,12 @@ const Todo = () => {
     }
 
     const deleteitem = async (id) => {
+        setDelTaskLoading(true);
         await deleteItem(id).then(
             async (result) => {
-                getAllList();
+                getAllList().then(() => {
+                    setDelTaskLoading(false);
+                });
             } 
         );
     }
@@ -97,11 +110,13 @@ const Todo = () => {
         if(task.taskName === '' || task.discription === ''){
             alert("Enter valid Task and Task Name");
         }else{
+            setCreateTaskLoading(true);
             insertItem(task).then(
                 () => {
                     getAllList().then(()=>{
                         setTask({ ...task, taskName: '', discription: '', });
                         setTask({ ...task, subTask :[]});
+                        setCreateTaskLoading(false);
                         document.getElementById("discription").value="";
                         document.getElementById("taskName").value="";
                     });
@@ -132,10 +147,12 @@ const Todo = () => {
 
     const handleEditSubmit =  (e) => {
         e.preventDefault(); 
+        setSaveEditTaskLoading(true);
         editItem(editID, Etask).then(
             () => {
                 getAllList().then( () => {
                     handleClose();
+                    setSaveEditTaskLoading(false);
                     setETask({ ...Etask, taskName: '', discription: '', });
                     // console.log(Etask);
                 } );
@@ -173,15 +190,23 @@ const Todo = () => {
         setETask({sub_tasks: Etask.sub_tasks});
     }
 
-    const toggleStatus = async (e, id, sTsk) => {     //REVISIT .......can be better
+    const toggleStatus = async (e, id, sTsk, i) => {     //REVISIT .......can be better
         
+        let isloading = btnLoading.slice();
+        isloading[i] = true;
+        setBtnLoading(isloading);
+
         if(sTsk[e.target.id].status === "pending"){
             
             let StatusNew = "done";
             let STaskNew = sTsk[e.target.id].stask;
             
             updateStatus(id, StatusNew, STaskNew ).then(() => {
-                getAllList();
+                getAllList().then(() => {
+                    let isloading = btnLoading.slice();
+                    isloading[i] = false;
+                    setBtnLoading(isloading);
+                });
             });
 
         }else if(sTsk[e.target.id].status === "done"){
@@ -190,7 +215,11 @@ const Todo = () => {
             let STaskNew = sTsk[e.target.id].stask;
             
             updateStatus(id, StatusNew, STaskNew ).then(() => {
-                getAllList();
+                getAllList().then(() => {
+                    let isloading = btnLoading.slice();
+                    isloading[i] = false;
+                    setBtnLoading(isloading);
+                });
             });
 
         }
@@ -242,7 +271,11 @@ const Todo = () => {
                                         <td>{subTask.stask}</td>
                                         <td className={`text-${subTask.status === "done" ? "success" : "warning"}`}>{subTask.status === "done" ? <i class="far fa-check-circle mr-2"></i> : <i class="fas fa-exclamation-circle mr-2"></i> }{subTask.status}</td>
                                         <td>
-                                            <Button id={`${i}`} name="status" style={{float: "right"}} onClick={(e) => toggleStatus(e, list._id, list.sub_tasks)} variant={`${subTask.status === "done" ? "success" : "warning"}`} >Mark as {subTask.status === "done" ? "pending" : "done"}</Button>
+                                        {btnLoading[i] ? 
+                                            <Button style={{float: "right", display: "flex", alignItems: "center"}} variant={`${subTask.status === "done" ? "success" : "warning"}`} disabled><ClipLoader loading={btnLoading} speedMultiplier={2} color={"white"} css={btnoverride} size={17} />Mark as {subTask.status === "done" ? "pending" : "done"}</Button>
+                                        :
+                                            <Button id={`${i}`} name="status" style={{float: "right"}} onClick={(e) => toggleStatus(e, list._id, list.sub_tasks, i)} variant={`${subTask.status === "done" ? "success" : "warning"}`} >Mark as {subTask.status === "done" ? "pending" : "done"}</Button> 
+                                        }
                                         </td>
                                         </tr>
                                         
@@ -263,9 +296,17 @@ const Todo = () => {
                                 </Table>
                                 </Card.Text>
 
-                                <Button style={{marginRight: "0.8rem", float: "right"}} variant="danger" onClick={() => deleteitem(list._id)}>
-                                    <i className="fas fa-trash"></i>
-                                </Button>
+                                    {delTaskLoading 
+                                    ?
+                                        <Button style={{marginRight: "0.8rem", float: "right"}} variant="danger" disabled>
+                                            <ClipLoader loading={delTaskLoading} speedMultiplier={2} color={"white"} css={btnoverride} size={17} />
+                                            <i className="fas fa-trash"></i>
+                                        </Button>
+                                    :
+                                        <Button style={{marginRight: "0.8rem", float: "right"}} variant="danger" onClick={() => deleteitem(list._id)}>
+                                            <i className="fas fa-trash"></i>
+                                        </Button>
+                                    }
                                 <Button style={{marginRight: "0.8rem", float: "right"}} variant="primary" onClick={() => handleShow(list._id)}>
                                     <i className="far fa-edit"></i>
                                 </Button>
@@ -330,8 +371,12 @@ const Todo = () => {
                                         <br/>
                                         <Button variant="light" onClick={addSubTask}><i className="far fa-plus-square mr-2"></i>Add</Button>
                                     </Form.Row>
-                                            
-                                    <Button style={{marginBottom: "15px", float: "right"}} variant="success"  type="submit">Create</Button>
+                                    {createTaskLoading 
+                                    ?
+                                        <Button style={{marginBottom: "15px", float: "right", display: "flex", alignItems: "center"}} variant="success"  type="submit" disabled><ClipLoader loading={createTaskLoading} speedMultiplier={2} color={"white"} css={btnoverride} size={17} />Creating...</Button>
+                                    :
+                                        <Button style={{marginBottom: "15px", float: "right"}} variant="success"  type="submit">Create</Button>    
+                                    }
                                 </Form>
                                 
                             </Card.Body>
@@ -399,8 +444,19 @@ const Todo = () => {
                             <Button variant="light" onClick={addNewEditFormSubTask}><i className="far fa-plus-square mr-2"></i>Add new</Button>
                             </Form.Group>
                     </Form.Row>
-                                                
-                    <Button style={{float: "right", marginLeft: "0.8rem"}} variant="success"  type="submit"><i className="fas fa-save mr-2"></i>Save Changes</Button>
+                    {saveEditTaskLoading
+                    ?
+                        <Button style={{float: "right", marginLeft: "0.8rem", display: "flex", alignItems: "center"}} disabled variant="success">
+                            <ClipLoader loading={saveEditTaskLoading} speedMultiplier={2} color={"white"} css={btnoverride} size={17} />
+                            <i className="fas fa-save mr-2"></i>
+                                Saving...
+                        </Button>
+                    :
+                        <Button style={{float: "right", marginLeft: "0.8rem"}} variant="success"  type="submit">
+                            <i className="fas fa-save mr-2"></i>
+                                Save Changes
+                        </Button>
+                    }                             
                     <Button style={{float: "right", marginLeft: "0.8rem"}} variant="secondary" onClick={handleClose}>
                     Close
                 </Button>
