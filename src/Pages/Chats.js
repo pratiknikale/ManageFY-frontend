@@ -25,7 +25,7 @@ const btnoverride = css`
 `;
 
 // const ENDPOINT = "http://localhost:8000";
-const ENDPOINT = "https://mytodo-mern-app.herokuapp.com/";
+const ENDPOINT = "https://mytodo-mern-app.herokuapp.com";
 var socket, selectedChatCompare;
 
 const Chats = () => {
