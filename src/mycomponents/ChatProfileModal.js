@@ -1,10 +1,10 @@
 import React, {useState, useEffect, useContext} from "react";
 import {Badge, Button, Col, FormControl, Modal, Row} from "react-bootstrap";
 import {getSender} from "../config/chatLogics";
-import {AppContext} from "../App";
 import {RemoveGroupUser, RenameGroup, AddGroupUser, GetChats} from "../services/api";
 import ClipLoader from "react-spinners/ClipLoader";
 import {css} from "@emotion/react";
+import {useSelector} from "react-redux";
 
 const btnoverride = css`
   display: inline-block;
@@ -18,7 +18,7 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
     // allChatUsers();
   }, []);
 
-  const {isUser} = useContext(AppContext);
+  const user = useSelector((state) => state.user.user);
 
   const [modalShow1, setModalShow1] = React.useState(false);
   // const [name, setName] = useState("");
@@ -33,10 +33,10 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
     if (keyword !== "") {
       const results = allUsers.filter((user) => {
         const fname =
-          user.firstName !== isUser.result.firstName && user.firstName.toLowerCase().includes(keyword.toLowerCase());
+          user.firstName !== user.result.firstName && user.firstName.toLowerCase().includes(keyword.toLowerCase());
 
         const lname =
-          user.lastName !== isUser.result.lastName && user.lastName.toLowerCase().includes(keyword.toLowerCase());
+          user.lastName !== user.result.lastName && user.lastName.toLowerCase().includes(keyword.toLowerCase());
 
         return fname + lname;
         // Use the toLowerCase() method to make it case-insensitive
@@ -51,9 +51,9 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
   };
 
   const delAGroupUser = async (chatID, userID) => {
-    // userID === isUser._id ? setSelectedChat() :
+    // userID === user._id ? setSelectedChat() :
     setUserDelLoading(true);
-    if (userID === isUser.result._id) {
+    if (userID === user.result._id) {
       if (window.confirm("Are you sure you want to leave the group?") === true) {
         const result = RemoveGroupUser(chatID, userID);
         result.then(setSelectedChat()).then(chats());
@@ -131,7 +131,7 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
               </h5>
             </>
           ) : (
-            <h5 style={{marginBottom: "15px", textAlign: "center"}}>{getSender(isUser.result, selectedChat.users)}</h5>
+            <h5 style={{marginBottom: "15px", textAlign: "center"}}>{getSender(user.result, selectedChat.users)}</h5>
           )}
 
           {selectedChat.isGroupChat &&
@@ -207,7 +207,7 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
         </Modal.Body>
         <Modal.Footer>
           {selectedChat.isGroupChat && (
-            <Button onClick={() => delAGroupUser(selectedChat._id, isUser.result._id)} variant="danger">
+            <Button onClick={() => delAGroupUser(selectedChat._id, user.result._id)} variant="danger">
               Leave Group
             </Button>
           )}

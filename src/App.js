@@ -9,32 +9,44 @@ import Assigned from "./Pages/Assigned";
 import Auth from "./Pages/Auth";
 import Chats from "./Pages/Chats";
 import ProtectedRoute from "./mycomponents/protectedRoutes";
+import ProtectedManagerRoute from "./mycomponents/ProtectedManagerRoute";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
-import {useState, createContext} from "react";
+import {useState, createContext, useEffect} from "react";
+import {useSelector} from "react-redux";
+import Settings from "./Pages/Settings";
+import Footer from "./mycomponents/Footer";
 
 export const AppContext = createContext(null);
 
 const App = () => {
-  const [isUser, setUser] = useState("");
-  const [role, setRole] = useState("");
+  const user = useSelector((state) => state.user.user);
   const [userName, setUserName] = useState("");
 
   return (
-    <AppContext.Provider value={{isUser, setUser, role, setRole, userName, setUserName}}>
+    <AppContext.Provider
+      value={{
+        userName,
+        setUserName,
+      }}
+    >
       <BrowserRouter>
         <Header />
-        {isUser && <Sidebar />}
-        <div className={isUser && "mainContainer"}>
+        {user.result && <Sidebar />}
+        <div className={user.result ? "mainContainer" : "notLoggedMainContainer"}>
           <Routes>
             <Route exact path="/" element={<Auth />} />
             <Route element={<ProtectedRoute />}>
               <Route exact path="/mytasks" element={<TList />} />
-              <Route exact path="/ManageEmployee" element={<ManageEmployee />} />
-              <Route exact path="/ManageManager" element={<ManageManager />} />
-              <Route exact path="/Assigned" element={<Assigned />} />
-              {isUser && <Route exact path="/Chats" element={<Chats />} />}
+              <Route element={<ProtectedManagerRoute />}>
+                <Route exact path="/ManageEmployee" element={<ManageEmployee />} />
+                <Route exact path="/ManageManager" element={<ManageManager />} />
+                <Route exact path="/Assigned" element={<Assigned />} />
+              </Route>
+              <Route exact path="/Chats" element={<Chats />} />
+              <Route exact path="/Settings" element={<Settings />} />
             </Route>
           </Routes>
+          <Footer />
         </div>
       </BrowserRouter>
     </AppContext.Provider>
@@ -42,3 +54,5 @@ const App = () => {
 };
 
 export default App;
+
+// ProtectedManagerRoute

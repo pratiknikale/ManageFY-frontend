@@ -34,6 +34,8 @@ const ManageEmployee = () => {
     getAllEmployeeList().then(() => {
       setIsNewEmployeeLoadingList(false);
     });
+
+    window.scrollTo({top: 0, left: 0});
   }, []);
 
   const getAllEmployeeList = async () => {
@@ -110,7 +112,7 @@ const ManageEmployee = () => {
     backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))",
   }}
 /> */}
-      <Container style={{marginBottom: "170px"}}>
+      <Container style={{marginBottom: "170px", flex: "1 0 auto"}}>
         <div className="my-2">
           <Form inline style={{display: "inline-flex"}}>
             <FormControl
@@ -120,6 +122,7 @@ const ManageEmployee = () => {
               placeholder="Search"
               style={{width: "400px"}}
               className="mr-sm-2"
+              autoComplete="off"
             />
             {/* <Button variant="outline-success">Search</Button> */}
           </Form>

@@ -7,11 +7,13 @@ import {css} from "@emotion/react";
 import UserEdit from "../mycomponents/UserEdit";
 
 const Assigned = () => {
-  //   useEffect(() => {
-  //     getAllEmployeeList().then(() => {
-  //       setIsNewEmployeeLoadingList(false);
-  //     });
-  //   }, []);
+  useEffect(() => {
+    // getAllEmployeeList().then(() => {
+    //   setIsNewEmployeeLoadingList(false);
+    // });
+
+    window.scrollTo({top: 0, left: 0});
+  }, []);
 
   return (
     <>
@@ -27,7 +29,7 @@ const Assigned = () => {
     backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))",
   }}
 /> */}
-      <Container style={{marginBottom: "170px"}}></Container>
+      <Container style={{marginBottom: "170px", flex: "1 0 auto"}}></Container>
     </>
   );
 };

@@ -1,7 +1,8 @@
 import axios from "axios";
+import {local, live} from "../config/apiUrl";
 
-// const API = axios.create({baseURL: "http://localhost:8000"});
-const API = axios.create({baseURL: "https://mytodo-mern-app.herokuapp.com"});
+const API = axios.create({baseURL: local});
+// const API = axios.create({baseURL: live});
 
 API.interceptors.request.use((req) => {
   if (localStorage.getItem("profile")) {
@@ -110,7 +111,7 @@ export const GetChats = async () => {
   return await API.get("/Chat/");
 };
 
-export const GetSingleChats = async (userId) => {
+export const GetCreateSingleChat = async (userId) => {
   return await API.post("/Chat/", {userId: userId});
 };
 

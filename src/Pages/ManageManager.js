@@ -27,8 +27,6 @@ const btnoverride = css`
 `;
 
 const ManageManager = () => {
-  // const { isUser } = useContext(AppContext);
-
   const navigate = useNavigate();
   const [MFormData, setMFormData] = useState(defaultFormFields);
   // const [search, setSearch] = useState("");
@@ -43,6 +41,8 @@ const ManageManager = () => {
     getAllManagerList().then(() => {
       setIsNewManagerLoadingList(false);
     });
+
+    window.scrollTo({top: 0, left: 0});
   }, []);
 
   const getAllManagerList = async () => {
@@ -128,7 +128,9 @@ const ManageManager = () => {
   };
   return (
     <>
-      <h4 style={{marginTop: "25px", marginBottom: "25px", marginLeft: "25px", color: "white"}}>Managers Section</h4>
+      <h4 style={{marginTop: "25px", marginBottom: "25px", marginLeft: "25px", color: "white", flex: "1 0 auto"}}>
+        Managers Section
+      </h4>
 
       {/* <hr
   style={{
@@ -150,6 +152,7 @@ const ManageManager = () => {
               style={{width: "400px"}}
               className="mr-sm-2"
               name="manager"
+              autoComplete="off"
             />
             {/* <Button variant="outline-success">Search</Button> */}
           </Form>

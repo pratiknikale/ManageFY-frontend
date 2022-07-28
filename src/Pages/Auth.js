@@ -65,7 +65,7 @@ const Auth = () => {
 
   return (
     <>
-      <Container>
+      <Container style={{height: "100%"}}>
         <h2 style={{marginTop: "50px", textAlign: "center", color: "white"}}>
           {
             // isManager ? "Manager Signin" :

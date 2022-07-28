@@ -5,7 +5,6 @@ import {css} from "@emotion/react";
 import ClockLoader from "react-spinners/ClockLoader";
 import ClipLoader from "react-spinners/ClipLoader";
 import TaskCards from "../mycomponents/TaskCards";
-import {AppContext} from "../App";
 
 // import { Scrollbar } from "react-scrollbars-custom";
 
@@ -36,7 +35,6 @@ const btnoverride = css`
 `;
 
 const Todo = () => {
-  // const {isUser} = useContext(AppContext);
   const [lists, setList] = useState([]);
   const [editID, setEditID] = useState("");
   const [task, setTask] = useState(initialCreateValue);
@@ -54,6 +52,8 @@ const Todo = () => {
       setLoading(false);
     });
     getAllManagerList();
+
+    window.scrollTo({top: 0, left: 0});
   }, []);
 
   const handleClose = () => setShow(false);
@@ -208,7 +208,7 @@ height: "1px",
 backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))",
 }}
 /> */}
-      <Container fluid style={{marginBottom: "100px", height: "100%", maxWidth: "94%"}}>
+      <Container fluid style={{marginBottom: "50px", maxWidth: "94%", flex: "1 0 auto"}}>
         {loading ? (
           <ClockLoader loading={loading} speedMultiplier={5} color={"white"} css={override} size={130} />
         ) : (
@@ -246,7 +246,14 @@ backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)
                     <Form onSubmit={(e) => handleCreateSubmit(e)} onChange={(e) => onValueChange(e)}>
                       <Form.Row>
                         <Form.Group as={Col} md="12">
-                          <Form.Control id="taskName" name="taskName" required type="text" placeholder="Task Name" />
+                          <Form.Control
+                            id="taskName"
+                            name="taskName"
+                            required
+                            type="text"
+                            placeholder="Task Name"
+                            autoComplete="off"
+                          />
                         </Form.Group>
                         <Form.Group as={Col} md="12">
                           <Form.Control
@@ -256,6 +263,7 @@ backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)
                             type="text"
                             placeholder="Discription"
                             as="textarea"
+                            autoComplete="off"
                           />
                         </Form.Group>
                         <Form.Group as={Col} md="12">
@@ -272,6 +280,7 @@ backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)
                                   placeholder="Task Name"
                                   aria-label="Recipient's username"
                                   aria-describedby="basic-addon2"
+                                  autoComplete="off"
                                   required
                                 />
                                 <Button
@@ -353,6 +362,7 @@ backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)
                     required
                     type="text"
                     placeholder="Task Name"
+                    autoComplete="off"
                   />
                 </Form.Group>
                 <Form.Group as={Col} md="12">
@@ -364,6 +374,7 @@ backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)
                     type="text"
                     placeholder="Discription"
                     as="textarea"
+                    autoComplete="off"
                   />
                 </Form.Group>
 
@@ -382,6 +393,7 @@ backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)
                           placeholder="Task Name"
                           aria-label="Recipient's username"
                           aria-describedby="basic-addon2"
+                          autoComplete="off"
                         />
                         <Button
                           onClick={(e) => delEditFormSubTask(e, i)}

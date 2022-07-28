@@ -1,22 +1,31 @@
 import React, {useState, useEffect, useContext} from "react";
 import {Button, Container, Form, FormControl, Row, Col, OverlayTrigger, Tooltip, Modal, Badge} from "react-bootstrap";
-import {
-  GetChats,
-  getAllUsers,
-  searchAllUser,
-  GetSingleChats,
-  CreateGroup,
-  getMessages,
-  sendMessages,
-} from "../services/api";
-import {AppContext} from "../App";
+import "../styles/Chat.css";
 import {getSender} from "../config/chatLogics";
 import ChatProfileModal from "../mycomponents/ChatProfileModal";
 import MessagesBox from "../mycomponents/MessagesBox";
 import moment from "moment";
 import ClipLoader from "react-spinners/ClipLoader";
 import {css} from "@emotion/react";
-import io from "socket.io-client";
+import {useSelector, useDispatch} from "react-redux";
+import {fetchallOrgUsers, setfilteredAllOrgUsers} from "../features/user/userSlice";
+import {
+  fetchAsyncMyAllChats,
+  setSelectedChat,
+  setSingleUserChatCreateModel,
+  setGroupChatCreateModel,
+  GetAsyncCreateSingleChat,
+  newGroupChatSubmit,
+} from "../features/chat/chatSlice";
+import {
+  myAllChatsSearchHandler,
+  handleSendMessage,
+  messageToSendTypingHandler,
+  onAllOrgUsersSearchChange,
+} from "../handler/chatHandler";
+import {BsEmojiSmileFill} from "react-icons/bs";
+import Picker from "emoji-picker-react";
+// import io from "socket.io-client";
 
 const btnoverride = css`
   display: inline-block;
@@ -24,220 +33,76 @@ const btnoverride = css`
   margin-left: 6px;
 `;
 
-// const ENDPOINT = "http://localhost:8000";
-const ENDPOINT = "https://mytodo-mern-app.herokuapp.com";
-var socket, selectedChatCompare;
-
 const Chats = () => {
-  const {isUser} = useContext(AppContext);
+  const dispatch = useDispatch();
 
-  const [mychats, setMychats] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const [selectedChat, setSelectedChat] = useState();
-  const [modalShow, setModalShow] = React.useState(false);
-  const [modalShow1, setModalShow1] = React.useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
-  const [selectedGroupUsers, setSelectedGroupUsers] = useState([]);
-  const [messages, setMessages] = useState([]);
+  // loaders
+  const myAllChatsLoading = useSelector((state) => state.chat.myAllChatsLoading);
+  // loaders
+
+  // data
+  const user = useSelector((state) => state.user.user);
+  const allOrgUsers = useSelector((state) => state.user.allOrgUsers);
+  const filteredAllOrgUsers = useSelector((state) => state.user.filteredAllOrgUsers);
+  const myAllChats = useSelector((state) => state.chat.myAllChats);
+  const filteredChats = useSelector((state) => state.chat.filteredChats);
+  const selectedChat = useSelector((state) => state.chat.selectedChat);
+  const singleChatModel = useSelector((state) => state.chat.singleUserChatCreateModel);
+  const groupChatModel = useSelector((state) => state.chat.groupChatCreateModel);
+  // data
+
+  // useState Hooks
   const [messageToSend, setMessageToSend] = useState("");
-  const [chatsLoading, setChatsLoading] = useState(false);
-  const [sendMessagesLoader, setSendMessagesLoader] = useState(false);
-  const [messagesLoader, setmessagesLoader] = useState(false);
-
-  const [socketConnected, setSocketConnected] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [selectedGroupUsers, setSelectedGroupUsers] = useState([]);
+  // useState Hooks
 
   useEffect(() => {
-    socket = io(ENDPOINT);
-    socket.emit("chatSetup", isUser.result);
-    socket.on("connection", () => setSocketConnected(true));
+    if (myAllChats.length < 1) {
+      dispatch(fetchAsyncMyAllChats());
+    }
+
+    // return () => dispatch(myAllChatsSearchFilter([])); // cleanup function
+  }, [dispatch]);
+
+  useEffect(() => {
+    window.scrollTo({top: 0, left: 0});
   }, []);
 
   useEffect(() => {
-    chats();
-    allChatUsers();
-    // console.log(isUser);
-    //   getAllEmployeeList().then(() => {
-    //     setIsNewEmployeeLoadingList(false);
-    //   });
-  }, []);
+    user.result && dispatch(fetchallOrgUsers(user.result._id));
+  }, [user]);
 
-  useEffect(() => {
-    getChatMessages();
-    selectedChatCompare = selectedChat;
-  }, [selectedChat]);
-
-  useEffect(() => {
-    socket.on("message received", (newMessageReceived) => {
-      if (!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat._id) {
-        console.log("notification");
-
-        //   give notification
-      } else {
-        setMessages([...messages, newMessageReceived]);
-      }
-    });
-  });
-
-  const getChatMessages = async () => {
-    if (selectedChat) {
-      setmessagesLoader(true);
-      const chatId = selectedChat._id;
-      const {data} = await getMessages(chatId);
-      setMessages(data);
-      socket.emit("join chat", selectedChat._id);
-      //   console.log(messages);
-    }
-    setmessagesLoader(false);
+  const emojiHideShowHandler = () => {
+    setShowEmoji(!showEmoji);
   };
 
-  const allChatUsers = async () => {
-    const {data} = await getAllUsers();
-    setAllUsers(data);
-    // console.log(data);
-  };
+  const handleEmojiClick = (event, emoji) => {
+    let message = messageToSend;
 
-  const chats = async () => {
-    setChatsLoading(true);
-    const {data} = await GetChats();
-    setMychats(data);
-    setFoundUsers(data);
-    setChatsLoading(false);
-    // console.log(data);
-  };
-
-  const onAllUsersSearchChange = async (e) => {
-    const search = e.target.value;
-    const {data} = await searchAllUser(search);
-    setAllUsers(data);
-    // console.log(data);
-  };
-
-  const getSingleChat = async (userId) => {
-    const {data} = await GetSingleChats(userId);
-
-    if (
-      mychats
-        .map(
-          (chat) =>
-            chat.users[0].firstName === data.users[0].firstName && chat.users[1].firstName === data.users[1].firstName
-        )
-        .includes(true)
-    ) {
-      alert("chat already exists");
-    } else {
-      setMychats([data, ...mychats]);
-      setFoundUsers([data, ...foundUsers]);
-      setSelectedChat(data);
-      // chats();
-      setModalShow(false);
-    }
-  };
-
-  const [name, setName] = useState("");
-  const [foundUsers, setFoundUsers] = useState(mychats);
-
-  //change to filter of every search field (manageManager, manageEmployee, chat Alluser search)
-  const filter = (e) => {
-    const keyword = e.target.value;
-
-    if (keyword !== "") {
-      const results = mychats.filter((user) => {
-        const fname0 =
-          !user.isGroupChat &&
-          user.users[0].firstName !== isUser.result.firstName &&
-          user.users[0].firstName.toLowerCase().includes(keyword.toLowerCase());
-        const fname1 =
-          !user.isGroupChat &&
-          user.users[1].firstName !== isUser.result.firstName &&
-          user.users[1].firstName.toLowerCase().includes(keyword.toLowerCase());
-        const lname0 =
-          !user.isGroupChat &&
-          user.users[0].lastName !== isUser.result.firstName &&
-          user.users[0].lastName.toLowerCase().includes(keyword.toLowerCase());
-        const lname1 =
-          !user.isGroupChat &&
-          user.users[1].lastName !== isUser.result.firstName &&
-          user.users[1].lastName.toLowerCase().includes(keyword.toLowerCase());
-
-        const cName = user.isGroupChat && user.chatName.toLowerCase().includes(keyword.toLowerCase());
-        return fname0 + fname1 + lname0 + lname1 + cName;
-        // Use the toLowerCase() method to make it case-insensitive
-      });
-      setFoundUsers(results);
-    } else {
-      setFoundUsers(mychats);
-      // If the text field is empty, show all users
-    }
-
-    setName(keyword);
+    message += emoji.emoji;
+    setMessageToSend(message);
   };
 
   const onGroupNameChange = (e) => {
-    const GroupName = e.target.value;
-    setNewGroupName(GroupName);
+    e.preventDefault();
+    setGroupName(e.target.value);
   };
 
-  const selectUser = (userToAdd) => {
-    if (selectedGroupUsers.includes(userToAdd)) {
-      alert("already user exist"); // add toast later
-    } else {
-      setSelectedGroupUsers([...selectedGroupUsers, userToAdd]);
-      // console.log(selectedGroupUsers);
-    }
+  const deleteSelectUser = (selectedUser) => {
+    const deletedUsersArray = selectedGroupUsers.filter((user) => {
+      return user._id !== selectedUser._id;
+    });
+
+    setSelectedGroupUsers(deletedUsersArray);
   };
-
-  const deleteSelectUser = (userToDel) => {
-    setSelectedGroupUsers(selectedGroupUsers.filter((sel) => sel._id !== userToDel._id));
-  };
-
-  const newGroupSubmit = async () => {
-    if (newGroupName === "") {
-      alert("Enter Group Name");
-    } else if (selectedGroupUsers.length < 2) {
-      alert("Group should exist more than 2 users");
-    } else {
-      const gName = newGroupName;
-      const gUsers = JSON.stringify(selectedGroupUsers.map((u) => u._id));
-
-      const {data} = await CreateGroup(gName, gUsers);
-      setMychats([data, ...mychats]);
-      setFoundUsers([data, ...foundUsers]);
-      setSelectedChat(data);
-      setModalShow1(false);
-
-      //   console.log(newGroupName);
-      //   console.log(selectedGroupUsers);
-    }
-  };
-
-  const typingHandler = (e) => {
-    setMessageToSend(e.target.value);
-    // console.log(messageToSend);
-  };
-
-  const sendMessage = async (event) => {
-    if (event.key === "Enter" && messageToSend) {
-      setSendMessagesLoader(true);
-      document.getElementById("sendMessageInput").value = "";
-      const {data} = await sendMessages(messageToSend, selectedChat._id);
-      //   console.log(data);
-      setMessageToSend("");
-      setSendMessagesLoader(false);
-      socket.emit("new message", data);
-      setMessages([...messages, data]);
-      const res = await GetChats();
-      setMychats(res.data);
-      setFoundUsers(res.data);
-    }
-  };
-
-  //   selectedChat && console.log(selectedChat._id);
 
   return (
     <>
       <h4 style={{marginTop: "25px", marginBottom: "25px", marginLeft: "25px", color: "white"}}>Chats</h4>
 
-      <Container fluid>
+      <Container fluid style={{marginBottom: "50px", maxWidth: "94%", flex: "1 0 auto"}}>
         <Row className="mx-5" style={{height: "50px"}}>
           <Col
             xs={4}
@@ -250,15 +115,15 @@ const Chats = () => {
           >
             <Form inline style={{display: "inline-flex", width: "95%"}}>
               <FormControl
-                value={name}
-                onChange={filter}
+                // value={name}
+                onChange={(e) => myAllChatsSearchHandler(e, user, myAllChats, dispatch)}
                 type="text"
                 placeholder="Search"
                 style={{width: "95%", backgroundColor: "#343a40", borderRadius: "20px", border: "none", color: "white"}}
                 className="mr-sm-2"
                 name="manager"
+                autoComplete="off"
               />
-              {/* <Button variant="outline-success">Search</Button> */}
             </Form>
             <OverlayTrigger
               key="1"
@@ -269,7 +134,7 @@ const Chats = () => {
                 </Tooltip>
               }
             >
-              <Button variant="dark" onClick={() => setModalShow(true)}>
+              <Button variant="dark" onClick={() => dispatch(setSingleUserChatCreateModel())}>
                 <i className="fas fa-plus"></i>
               </Button>
             </OverlayTrigger>
@@ -282,7 +147,7 @@ const Chats = () => {
                 </Tooltip>
               }
             >
-              <Button className="ml-2" variant="dark" onClick={() => setModalShow1(true)}>
+              <Button className="ml-2" variant="dark" onClick={() => dispatch(setGroupChatCreateModel())}>
                 <i className="fas fa-users"></i>
               </Button>
             </OverlayTrigger>
@@ -298,21 +163,21 @@ const Chats = () => {
               justifyContent: "space-between",
             }}
           >
-            {selectedChat && (
+            {selectedChat._id && (
               <>
                 {selectedChat.isGroupChat ? (
                   <h5 style={{color: "white", marginBottom: "0px"}}>{selectedChat.chatName}</h5>
                 ) : (
-                  <h5 style={{color: "white", marginBottom: "0px"}}>{getSender(isUser.result, selectedChat.users)}</h5>
+                  <h5 style={{color: "white", marginBottom: "0px"}}>{getSender(user.result, selectedChat.users)}</h5>
                 )}
-                <ChatProfileModal
+                {/* <ChatProfileModal
                   chats={chats}
                   setSelectedChat={setSelectedChat}
                   allUsers={allUsers}
                   selectedChat={selectedChat}
                   setMychats={setMychats}
                   setFoundUsers={setFoundUsers}
-                />
+                /> */}
               </>
             )}
           </Col>
@@ -321,10 +186,10 @@ const Chats = () => {
           <Col xs={4} style={{backgroundColor: "#1d2124", padding: "0px", overflowX: "auto"}}>
             <div className="side-menu">
               <ul>
-                {chatsLoading ? (
+                {myAllChatsLoading ? (
                   <p style={{display: "flex", alignItems: "center", paddingTop: "200px", justifyContent: "center"}}>
                     <ClipLoader
-                      loading={chatsLoading}
+                      loading={myAllChatsLoading}
                       speedMultiplier={2}
                       color={"white"}
                       css={btnoverride}
@@ -332,11 +197,10 @@ const Chats = () => {
                     />
                   </p>
                 ) : (
-                  foundUsers.map((chat, i) => (
+                  filteredChats.map((chat, i) => (
                     <li className="side-menuLI" key={chat._id} style={{cursor: "pointer"}}>
                       <a
-                        onClick={() => setSelectedChat(chat)}
-                        // onClick={() => openChat(chat)}
+                        onClick={() => dispatch(setSelectedChat(chat))}
                         className="side-menuItems"
                         style={
                           selectedChat && selectedChat._id === chat._id
@@ -356,7 +220,7 @@ const Chats = () => {
                             )}
                           </Col>
                           <Col sm={11}>
-                            {chat.isGroupChat ? chat.chatName : getSender(isUser.result, chat.users)}
+                            {chat.isGroupChat ? chat.chatName : getSender(user.result, chat.users)}
                             <span style={{float: "right", fontSize: "11px", opacity: "0.5"}}>
                               {moment(chat.updatedAt).fromNow()}
                             </span>
@@ -388,35 +252,50 @@ const Chats = () => {
               height: "100%",
             }}
           >
-            <MessagesBox
-              selectedChat={selectedChat}
-              messages={messages}
-              sendMessagesLoader={sendMessagesLoader}
-              getChatMessages={getChatMessages}
-              messagesLoader={messagesLoader}
-              selectedChatCompare={selectedChatCompare}
-              socket={socket}
-              setMessages={setMessages}
-              ENDPOINT={ENDPOINT}
-            />
-            {selectedChat && (
-              <FormControl
-                id="sendMessageInput"
-                onChange={typingHandler}
-                type="text"
-                placeholder="Enter your message here"
-                style={{
-                  width: "100%",
-                  backgroundColor: "#1d2124",
-                  borderRadius: "20px",
-                  border: "none",
-                  color: "white",
-                  marginBottom: "8px",
-                  padding: "10px",
-                }}
-                className="mr-sm-2"
-                onKeyDown={sendMessage}
-              />
+            {selectedChat._id && (
+              <>
+                <MessagesBox />
+                <div
+                  className="emoji"
+                  style={{
+                    fontSize: "30px",
+                    display: "flex",
+                    flexDirection: "row",
+                    position: "relative",
+                    cursor: "pointer",
+                  }}
+                >
+                  {showEmoji && (
+                    <Picker onEmojiClick={handleEmojiClick} pickerStyle={{position: "absolute", bottom: "60px"}} />
+                  )}
+                  <BsEmojiSmileFill
+                    onClick={emojiHideShowHandler}
+                    style={{color: showEmoji && "#16191c", margin: "5px", marginRight: "8px"}}
+                  ></BsEmojiSmileFill>
+                  <FormControl
+                    id="sendMessageInput"
+                    value={messageToSend}
+                    onChange={(e) => messageToSendTypingHandler(e, setMessageToSend)}
+                    type="text"
+                    placeholder="Enter your message here"
+                    autoComplete="off"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#1d2124",
+                      borderRadius: "20px",
+                      border: "none",
+                      color: "white",
+                      marginBottom: "8px",
+                      padding: "10px",
+                    }}
+                    className="mr-sm-2"
+                    onKeyDown={(event) =>
+                      handleSendMessage(event, messageToSend, setMessageToSend, selectedChat, myAllChats, dispatch)
+                    }
+                    onClick={() => setShowEmoji(false)}
+                  />
+                </div>
+              </>
             )}
           </Col>
         </Row>
@@ -424,27 +303,36 @@ const Chats = () => {
         {/* single user model */}
 
         <Modal
-          show={modalShow}
-          onHide={() => setModalShow(false)}
+          show={singleChatModel}
+          onHide={() => {
+            dispatch(setfilteredAllOrgUsers(allOrgUsers));
+            dispatch(setSingleUserChatCreateModel());
+          }}
           size="lg"
           aria-labelledby="contained-modal-title-vcenter"
           centered
         >
-          <Modal.Header closeButton>
+          <Modal.Header style={{flexDirection: "column", alignItems: "center"}}>
+            <span style={{margin: "14px", fontSize: "20px"}}>New Chat</span>
             <FormControl
-              onChange={(e) => onAllUsersSearchChange(e)}
+              onChange={(e) => onAllOrgUsersSearchChange(e, user.result._id, allOrgUsers, dispatch)}
               type="text"
               placeholder="Search"
-              style={{width: "95%", borderRadius: "20px"}}
+              style={{width: "100%", borderRadius: "20px"}}
               className="mr-sm-2"
               name="manager"
+              autoComplete="off"
             />
           </Modal.Header>
-          <Modal.Body style={{height: "300px", overflowX: "auto"}}>
-            {allUsers.map((users, i) => (
+          <Modal.Body style={{height: "300px", overflowX: "hidden", overflowY: "scroll"}}>
+            {filteredAllOrgUsers.map((user, i) => (
               <Button
-                key={users._id}
-                onClick={() => getSingleChat(users._id)}
+                key={user._id}
+                onClick={() => {
+                  dispatch(GetAsyncCreateSingleChat(user._id));
+                  dispatch(setSingleUserChatCreateModel());
+                  dispatch(setfilteredAllOrgUsers(allOrgUsers));
+                }}
                 className="my-1"
                 variant="light"
                 style={{display: "block", width: "100%", textAlign: "left"}}
@@ -454,9 +342,9 @@ const Chats = () => {
                     <i className="far fa-user fa-2x mr-3"></i>
                   </Col>
                   <Col sm={11} style={{paddingTop: "14px"}}>
-                    {users.firstName} {users.lastName}
+                    {user.firstName} {user.lastName}
                     <p style={{fontSize: "14px"}}>
-                      <b>Email</b>: {users.email}
+                      <b>Email</b>: {user.email}
                     </p>
                   </Col>
                 </Row>
@@ -464,7 +352,14 @@ const Chats = () => {
             ))}
           </Modal.Body>
           <Modal.Footer>
-            <Button onClick={() => setModalShow(false)}>Close</Button>
+            <Button
+              onClick={() => {
+                dispatch(setfilteredAllOrgUsers(allOrgUsers));
+                dispatch(setSingleUserChatCreateModel());
+              }}
+            >
+              Close
+            </Button>
           </Modal.Footer>
         </Modal>
 
@@ -473,8 +368,12 @@ const Chats = () => {
         {/* create group model */}
 
         <Modal
-          show={modalShow1}
-          onHide={() => setModalShow1(false)}
+          show={groupChatModel}
+          onHide={() => {
+            dispatch(setGroupChatCreateModel());
+            setSelectedGroupUsers([]);
+            dispatch(setfilteredAllOrgUsers(allOrgUsers));
+          }}
           size="lg"
           aria-labelledby="contained-modal-title-vcenter"
           centered
@@ -488,9 +387,10 @@ const Chats = () => {
               style={{width: "100%", borderRadius: "20px"}}
               className="my-3 mr-5"
               name="manager"
+              autoComplete="off"
             />
             <FormControl
-              onChange={(e) => onAllUsersSearchChange(e)}
+              onChange={(e) => onAllOrgUsersSearchChange(e, user.result._id, allOrgUsers, dispatch)}
               type="text"
               placeholder="Search users to add"
               style={{width: "100%", borderRadius: "20px"}}
@@ -498,10 +398,10 @@ const Chats = () => {
               name="manager"
             />
             {selectedGroupUsers &&
-              selectedGroupUsers.map((selectedUsers) => (
-                <Badge key={selectedUsers._id} pill className="mx-1" variant="primary">
-                  {selectedUsers.firstName}
-                  <span onClick={() => deleteSelectUser(selectedUsers)} style={{cursor: "pointer"}}>
+              selectedGroupUsers.map((selectedUser) => (
+                <Badge key={selectedUser._id} pill className="mx-1" variant="primary">
+                  {selectedUser.firstName}
+                  <span onClick={() => deleteSelectUser(selectedUser)} style={{cursor: "pointer"}}>
                     {" "}
                     <b>X</b>
                   </span>
@@ -509,10 +409,10 @@ const Chats = () => {
               ))}
           </Modal.Header>
           <Modal.Body style={{height: "300px", overflowX: "auto"}}>
-            {allUsers.map((users, i) => (
+            {filteredAllOrgUsers.map((users, i) => (
               <Button
                 key={users._id}
-                onClick={() => selectUser(users)}
+                onClick={() => setSelectedGroupUsers([...selectedGroupUsers, users])}
                 className="my-1"
                 variant="light"
                 style={{display: "block", width: "100%", textAlign: "left"}}
@@ -532,10 +432,26 @@ const Chats = () => {
             ))}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="success" onClick={newGroupSubmit}>
+            <Button
+              variant="success"
+              onClick={() => {
+                dispatch(newGroupChatSubmit({groupName: groupName, selectedGroupUsers: selectedGroupUsers}));
+                dispatch(setGroupChatCreateModel());
+                setSelectedGroupUsers([]);
+                dispatch(setfilteredAllOrgUsers(allOrgUsers));
+              }}
+            >
               Create Group
             </Button>
-            <Button onClick={() => setModalShow1(false)}>Close</Button>
+            <Button
+              onClick={() => {
+                dispatch(setGroupChatCreateModel());
+                setSelectedGroupUsers([]);
+                dispatch(setfilteredAllOrgUsers(allOrgUsers));
+              }}
+            >
+              Close
+            </Button>
           </Modal.Footer>
         </Modal>
 
