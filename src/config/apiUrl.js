@@ -1,2 +1,2 @@
 export const local = "http://localhost:8000";
-export const live = "https://mytodo-mern-app.herokuapp.com";
+export const live = "https://managefy-mern-app.herokuapp.com/";
