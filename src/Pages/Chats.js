@@ -25,7 +25,7 @@ import {
 } from "../handler/chatHandler";
 import {BsEmojiSmileFill} from "react-icons/bs";
 import Picker from "emoji-picker-react";
-// import io from "socket.io-client";
+import {SocketContext} from "../context/socket";
 
 const btnoverride = css`
   display: inline-block;
@@ -36,9 +36,7 @@ const btnoverride = css`
 const Chats = () => {
   const dispatch = useDispatch();
 
-  // loaders
-  const myAllChatsLoading = useSelector((state) => state.chat.myAllChatsLoading);
-  // loaders
+  const socket = useContext(SocketContext);
 
   // data
   const user = useSelector((state) => state.user.user);
@@ -51,6 +49,9 @@ const Chats = () => {
   const groupChatModel = useSelector((state) => state.chat.groupChatCreateModel);
   // data
 
+  // loaders
+  const [myAllChatsLoading, setMyAllChatsLoading] = useState(false);
+  // loaders
   // useState Hooks
   const [messageToSend, setMessageToSend] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -60,10 +61,13 @@ const Chats = () => {
 
   useEffect(() => {
     if (myAllChats.length < 1) {
-      dispatch(fetchAsyncMyAllChats());
+      setMyAllChatsLoading(true);
+      dispatch(fetchAsyncMyAllChats()).then(() => {
+        setMyAllChatsLoading(false);
+      });
     }
 
-    // return () => dispatch(myAllChatsSearchFilter([])); // cleanup function
+    return () => dispatch(setSelectedChat({})); // cleanup function
   }, [dispatch]);
 
   useEffect(() => {
@@ -115,7 +119,6 @@ const Chats = () => {
           >
             <Form inline style={{display: "inline-flex", width: "95%"}}>
               <FormControl
-                // value={name}
                 onChange={(e) => myAllChatsSearchHandler(e, user, myAllChats, dispatch)}
                 type="text"
                 placeholder="Search"
@@ -170,14 +173,7 @@ const Chats = () => {
                 ) : (
                   <h5 style={{color: "white", marginBottom: "0px"}}>{getSender(user.result, selectedChat.users)}</h5>
                 )}
-                {/* <ChatProfileModal
-                  chats={chats}
-                  setSelectedChat={setSelectedChat}
-                  allUsers={allUsers}
-                  selectedChat={selectedChat}
-                  setMychats={setMychats}
-                  setFoundUsers={setFoundUsers}
-                /> */}
+                <ChatProfileModal />
               </>
             )}
           </Col>
@@ -290,7 +286,16 @@ const Chats = () => {
                     }}
                     className="mr-sm-2"
                     onKeyDown={(event) =>
-                      handleSendMessage(event, messageToSend, setMessageToSend, selectedChat, myAllChats, dispatch)
+                      handleSendMessage(
+                        event,
+                        messageToSend,
+                        setMessageToSend,
+                        selectedChat,
+                        myAllChats,
+                        dispatch,
+                        socket,
+                        user
+                      )
                     }
                     onClick={() => setShowEmoji(false)}
                   />
@@ -329,7 +334,7 @@ const Chats = () => {
               <Button
                 key={user._id}
                 onClick={() => {
-                  dispatch(GetAsyncCreateSingleChat(user._id));
+                  dispatch(GetAsyncCreateSingleChat({userId: user._id, socket: socket}));
                   dispatch(setSingleUserChatCreateModel());
                   dispatch(setfilteredAllOrgUsers(allOrgUsers));
                 }}
@@ -412,7 +417,13 @@ const Chats = () => {
             {filteredAllOrgUsers.map((users, i) => (
               <Button
                 key={users._id}
-                onClick={() => setSelectedGroupUsers([...selectedGroupUsers, users])}
+                onClick={() => {
+                  if (selectedGroupUsers.includes(users)) {
+                    alert("User already selected");
+                  } else {
+                    setSelectedGroupUsers([...selectedGroupUsers, users]);
+                  }
+                }}
                 className="my-1"
                 variant="light"
                 style={{display: "block", width: "100%", textAlign: "left"}}
@@ -435,7 +446,9 @@ const Chats = () => {
             <Button
               variant="success"
               onClick={() => {
-                dispatch(newGroupChatSubmit({groupName: groupName, selectedGroupUsers: selectedGroupUsers}));
+                dispatch(
+                  newGroupChatSubmit({groupName: groupName, selectedGroupUsers: selectedGroupUsers, socket: socket})
+                );
                 dispatch(setGroupChatCreateModel());
                 setSelectedGroupUsers([]);
                 dispatch(setfilteredAllOrgUsers(allOrgUsers));

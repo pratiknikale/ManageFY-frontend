@@ -1,12 +1,71 @@
-import React, {useContext} from "react";
+import React, {useContext, useEffect, useRef} from "react";
 import {NavLink} from "react-router-dom";
-import {useSelector} from "react-redux";
-
+import {useSelector, useDispatch} from "react-redux";
 import "../styles/Sidebar.css";
+import {SocketContext} from "../context/socket";
+import {receivedNewMsg} from "../features/chat/messagesSlice";
+import {resetSortAllChats, setSelectedChat, receiveAddNewChat} from "../features/chat/chatSlice";
 
 const Sidebar = () => {
+  const dispatch = useDispatch();
+
+  const socket = useContext(SocketContext);
+
   const role = useSelector((state) => state.user.role);
-  // console.log(role);
+  const user = useSelector((state) => state.user.user);
+  const filteredChats = useSelector((state) => state.chat.filteredChats);
+  const selectedChat = useSelector((state) => state.chat.selectedChat);
+
+  const SelectedChatRef = React.useRef(selectedChat);
+  const FilteredChatsRef = React.useRef(filteredChats);
+  React.useEffect(() => {
+    SelectedChatRef.current = selectedChat;
+    FilteredChatsRef.current = filteredChats;
+  });
+
+  const messageReceiveHandler = async (message, chat, selectedChat, filteredChats) => {
+    if (selectedChat._id && selectedChat._id === chat._id) {
+      let popedSelectedChatArray = await filteredChats.filter((filChat) => {
+        return selectedChat._id !== filChat._id;
+      });
+      dispatch(setSelectedChat(chat));
+      if (filteredChats[0]._id !== chat._id) {
+        dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+      }
+      dispatch(receivedNewMsg(message));
+    }
+  };
+
+  const newGroupEditedHandler = async (chat, filteredChats) => {
+    let popedSelectedChatArray = await filteredChats.filter((FilChat) => {
+      return chat._id !== FilChat._id;
+    });
+
+    dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+  };
+
+  useEffect(() => {
+    user && socket && socket.emit("setup", user.result._id);
+
+    const newMsghandler = (message, chat) => {
+      messageReceiveHandler(message, chat, SelectedChatRef.current, FilteredChatsRef.current);
+    };
+    const grpEditHandler = (chat) => {
+      newGroupEditedHandler(chat, FilteredChatsRef.current);
+    };
+
+    socket.on("Receive-Message", newMsghandler);
+
+    socket.on("Single-Chat-Created", (chat) => {
+      dispatch(receiveAddNewChat(chat));
+    });
+
+    socket.on("new-group-chat", (chat) => {
+      dispatch(receiveAddNewChat(chat));
+    });
+
+    socket.on("new-group-edited", grpEditHandler);
+  }, [user, socket]);
 
   return (
     <div className="Sidebar">

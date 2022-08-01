@@ -30,7 +30,7 @@ const MessagesBox = () => {
 
   useEffect(() => {
     dispatch(fetchAsyncSelectedChatMessages(selectedChat._id));
-  }, [selectedChat]);
+  }, [selectedChat._id]);
 
   return (
     <div style={{overflowY: "auto", display: "flex", flexDirection: "column", paddingBottom: "10px"}}>

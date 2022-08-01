@@ -1,6 +1,9 @@
 import {myAllChatsSearchFilter, resetSortAllChats} from "../features/chat/chatSlice";
 import {SendAsyncSelectedChatMessage} from "../features/chat/messagesSlice";
 import {setfilteredAllOrgUsers} from "../features/user/userSlice";
+import {getSenderId} from "../config/chatLogics";
+
+let Socket;
 
 export const myAllChatsSearchHandler = (e, user, myAllChats, dispatch) => {
   // handler for chats search
@@ -13,7 +16,7 @@ export const myAllChatsSearchHandler = (e, user, myAllChats, dispatch) => {
       }
     } else {
       let userOtherThanLogged = chat.users.filter((notLoggedUser) => {
-        return notLoggedUser.firstName !== user.result.firstName;
+        return notLoggedUser._id !== user.result._id;
       });
 
       if (
@@ -37,23 +40,48 @@ export const myAllChatsSearchHandler = (e, user, myAllChats, dispatch) => {
   }
 };
 
-export const handleSendMessage = async (event, messageToSend, setMessageToSend, selectedChat, myAllChats, dispatch) => {
+export const handleSendMessage = async (
+  event,
+  messageToSend,
+  setMessageToSend,
+  selectedChat,
+  myAllChats,
+  dispatch,
+  socket,
+  user
+) => {
   if (event.key === "Enter") {
-    dispatch(
-      SendAsyncSelectedChatMessage({
-        content: messageToSend,
-        chatId: selectedChat._id,
-      })
-    ); //sends message to specified chat id
+    if (messageToSend.length < 1) {
+      alert("please type something, blank msg cannot be sent");
+    } else {
+      let userOtherThanLogged = selectedChat.users.filter((notLoggedUser) => {
+        return notLoggedUser._id !== user.result._id;
+      });
+      let userOtherThanLoggedIDs = userOtherThanLogged.map((user) => user._id);
+      // console.log(userOtherThanLoggedIDs);
+      // const senderId = getSenderId(user.result, selectedChat.users);
 
-    // returns an array of chats with removed selected chat from it so that to add selected chat on the top
-    let popedSelectedChatArray = await myAllChats.filter((chat) => {
-      return selectedChat !== chat;
-    });
-    dispatch(resetSortAllChats({selectedChat: selectedChat, popedSelectedChatArray: popedSelectedChatArray})); // adds selected chat on the top chats Array
+      dispatch(
+        SendAsyncSelectedChatMessage({
+          content: messageToSend,
+          chat: selectedChat,
+          socket: socket,
+          userOtherThanLoggedIDs: userOtherThanLoggedIDs,
+        })
+      ); //sends message to specified chat id
 
-    setMessageToSend(""); //clears to send message state
-    document.getElementById("sendMessageInput").value = ""; //clears the send message input field
+      // returns an array of chats with removed selected chat from it so that to add selected chat on the top
+      let popedSelectedChatArray = await myAllChats.filter((chat) => {
+        return selectedChat !== chat;
+      });
+
+      if (myAllChats[0]._id !== selectedChat._id) {
+        dispatch(resetSortAllChats({selectedChat: selectedChat, popedSelectedChatArray: popedSelectedChatArray})); // adds selected chat on the top chats Array
+      }
+
+      setMessageToSend(""); //clears to send message state
+      document.getElementById("sendMessageInput").value = ""; //clears the send message input field
+    }
   }
 };
 
@@ -69,7 +97,11 @@ export const onAllOrgUsersSearchChange = async (e, loggedUserId, allOrgUsers, di
     dispatch(setfilteredAllOrgUsers(allOrgUsers));
   } else {
     const userFilteredResult = await allOrgUsers.filter((user) => {
-      return user.firstName.includes(e.target.value);
+      return (
+        user.firstName.includes(e.target.value) ||
+        user.lastName.includes(e.target.value) ||
+        user.email.includes(e.target.value)
+      );
     });
 
     const userFilteredResultRemovedLoggedUser = await userFilteredResult.filter((user) => {

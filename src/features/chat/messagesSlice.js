@@ -19,8 +19,9 @@ export const fetchAsyncSelectedChatMessages = createAsyncThunk(
 // sending message
 export const SendAsyncSelectedChatMessage = createAsyncThunk(
   "messages/SendAsyncSelectedChatMessage",
-  async ({content, chatId}) => {
-    const response = await sendMessages(content, chatId);
+  async ({content, chat, socket, userOtherThanLoggedIDs}) => {
+    const response = await sendMessages(content, chat._id);
+    socket.emit("Send-Message", response.data, userOtherThanLoggedIDs, chat);
     return response.data;
   }
 );
@@ -28,35 +29,43 @@ export const SendAsyncSelectedChatMessage = createAsyncThunk(
 export const messagesSlice = createSlice({
   name: "messages",
   initialState,
-  reducers: {},
+  reducers: {
+    receivedNewMsg: (state, {payload}) => {
+      if (state.messages.length === 0) {
+        return {...state, messages: [...state.messages, payload]};
+      }
+      if (state.messages[state.messages.length - 1]._id !== payload._id) {
+        return {...state, messages: [...state.messages, payload]};
+      }
+    },
+  },
   extraReducers: {
     [fetchAsyncSelectedChatMessages.pending]: (state) => {
-      console.log("messages for selected chat pending");
+      // console.log("messages for selected chat pending");
       return {...state, messagesLoader: true};
     },
     [fetchAsyncSelectedChatMessages.fulfilled]: (state, {payload}) => {
-      console.log("messages for selected chat fetch successfully");
+      // console.log("messages for selected chat fetch successfully");
       return {...state, messages: payload, messagesLoader: false};
     },
     [fetchAsyncSelectedChatMessages.rejected]: (state) => {
-      console.log("messages for selected chat rejected!!");
+      // console.log("messages for selected chat rejected!!");
       return {...state, messagesLoader: false};
     },
     [SendAsyncSelectedChatMessage.pending]: (state) => {
-      console.log("send message pending");
       return {...state, sentMessagesLoader: true};
     },
     [SendAsyncSelectedChatMessage.fulfilled]: (state, {payload}) => {
-      console.log("send message fetch successfully");
+      // console.log("send message fetch successfully");
+
       return {...state, messages: [...state.messages, payload], sentMessagesLoader: false};
     },
     [SendAsyncSelectedChatMessage.rejected]: (state) => {
-      console.log("send message rejected!!");
       return {...state, sentMessagesLoader: false};
     },
   },
 });
 
-// export const {} = messagesSlice.actions;
+export const {receivedNewMsg} = messagesSlice.actions;
 
 export default messagesSlice.reducer;

@@ -35,17 +35,8 @@ export const userSlice = createSlice({
     },
   },
   extraReducers: {
-    [fetchallOrgUsers.pending]: () => {
-      console.log("my chats pending");
-      // return {...state, myAllChatsLoading: true};
-    },
     [fetchallOrgUsers.fulfilled]: (state, {payload}) => {
-      console.log("all org users fetch successfully");
       return {...state, allOrgUsers: payload, filteredAllOrgUsers: payload};
-    },
-    [fetchallOrgUsers.rejected]: () => {
-      console.log("my chats rejected!!");
-      // return {...state, myAllChatsLoading: false};
     },
   },
 });

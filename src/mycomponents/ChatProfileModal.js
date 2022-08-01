@@ -1,10 +1,13 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, {useState, useContext} from "react";
 import {Badge, Button, Col, FormControl, Modal, Row} from "react-bootstrap";
 import {getSender} from "../config/chatLogics";
-import {RemoveGroupUser, RenameGroup, AddGroupUser, GetChats} from "../services/api";
+import {AddGroupUser, RenameGroup} from "../services/api";
 import ClipLoader from "react-spinners/ClipLoader";
 import {css} from "@emotion/react";
-import {useSelector} from "react-redux";
+import {useSelector, useDispatch} from "react-redux";
+import {delAGroupUser, setSelectedChat, resetSortAllChats} from "../features/chat/chatSlice";
+import {onAllOrgUsersSearchChange} from "../handler/chatHandler";
+import {SocketContext} from "../context/socket";
 
 const btnoverride = css`
   display: inline-block;
@@ -12,110 +15,127 @@ const btnoverride = css`
   margin-left: 6px;
 `;
 
-const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMychats, setFoundUsers}) => {
-  useEffect(() => {
-    // chats();
-    // allChatUsers();
-  }, []);
+const ChatProfileModal = () => {
+  const socket = useContext(SocketContext);
 
+  const dispatch = useDispatch();
+
+  // redux data
   const user = useSelector((state) => state.user.user);
+  const myAllChats = useSelector((state) => state.chat.myAllChats);
+  const allOrgUsers = useSelector((state) => state.user.allOrgUsers);
+  const filteredAllOrgUsers = useSelector((state) => state.user.filteredAllOrgUsers);
+  const selectedChat = useSelector((state) => state.chat.selectedChat);
+  // redux data
 
-  const [modalShow1, setModalShow1] = React.useState(false);
-  // const [name, setName] = useState("");
-  const [newGName, setNewGName] = useState("");
-  const [foundToAddUsers, setFoundToAddUsers] = useState();
-  const [userDelLoading, setUserDelLoading] = useState(false);
+  // useState Hooks
+  const [chatOptionModalShow, setChatOptionModalShow] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [userDelAddLoading, setUserDelAddLoading] = useState(false);
   const [groupRenameLoading, setGroupRenameLoading] = useState(false);
+  // useState Hooks
 
-  const filter = (e) => {
-    const keyword = e.target.value;
+  const delAGroupUserHandler = async (chat, userID) => {
+    setUserDelAddLoading(true);
+    const popedSelectedChatArray = await myAllChats.filter((filChat) => {
+      return chat._id !== filChat._id;
+    });
 
-    if (keyword !== "") {
-      const results = allUsers.filter((user) => {
-        const fname =
-          user.firstName !== user.result.firstName && user.firstName.toLowerCase().includes(keyword.toLowerCase());
-
-        const lname =
-          user.lastName !== user.result.lastName && user.lastName.toLowerCase().includes(keyword.toLowerCase());
-
-        return fname + lname;
-        // Use the toLowerCase() method to make it case-insensitive
-      });
-      setFoundToAddUsers(results);
-    } else {
-      setFoundToAddUsers("");
-      // If the text field is empty, show all users
-    }
-
-    // setName(keyword);
-  };
-
-  const delAGroupUser = async (chatID, userID) => {
-    // userID === user._id ? setSelectedChat() :
-    setUserDelLoading(true);
     if (userID === user.result._id) {
       if (window.confirm("Are you sure you want to leave the group?") === true) {
-        const result = RemoveGroupUser(chatID, userID);
-        result.then(setSelectedChat()).then(chats());
+        dispatch(
+          delAGroupUser({
+            chat: chat,
+            userID: userID,
+            popedSelectedChatArray: popedSelectedChatArray,
+            selfDeleteFromGroup: true,
+            loggedUserId: user.result._id,
+            socket: socket,
+          })
+        );
       }
     } else {
-      const {data} = await RemoveGroupUser(chatID, userID);
-      setSelectedChat(data);
-      chats();
+      dispatch(
+        delAGroupUser({
+          chat: chat,
+          userID: userID,
+          popedSelectedChatArray: popedSelectedChatArray,
+          selfDeleteFromGroup: false,
+          loggedUserId: user.result._id,
+          socket: socket,
+        })
+      );
     }
-
-    setUserDelLoading(false);
-
-    // console.log(data);
+    setUserDelAddLoading(false);
   };
 
   const onRenameGroupChange = (e) => {
-    const newName = e.target.value;
+    e.preventDefault();
 
-    setNewGName(newName);
+    setNewGroupName(e.target.value);
   };
 
-  const renameGroupSubmit = async (chatID, NewGName) => {
+  const renameGroupSubmit = async (chat, NewGName) => {
     setGroupRenameLoading(true);
-    const {data} = await RenameGroup(chatID, NewGName);
-    setSelectedChat(data);
-    // chats();
-    const res = await GetChats();
-    setMychats(res.data);
-    setFoundUsers(res.data);
-    setGroupRenameLoading(false);
+    const popedSelectedChatArray = await myAllChats.filter((FilChat) => {
+      return selectedChat._id !== FilChat._id;
+    });
+    const selectedGroupUserIds = await chat.users.map((users) => {
+      return users._id;
+    });
+    const loggedUserRemovedUserIds = await selectedGroupUserIds.filter((ids) => {
+      return ids !== user.result._id;
+    });
 
-    // console.log(data);
+    const response = await RenameGroup(chat._id, NewGName);
+
+    socket.emit("group-edit", response.data, loggedUserRemovedUserIds);
+    dispatch(resetSortAllChats({selectedChat: response.data, popedSelectedChatArray: popedSelectedChatArray}));
+    dispatch(setSelectedChat(response.data));
+    setGroupRenameLoading(false);
   };
 
-  const addUserToGroup = async (chatID, userID) => {
+  const addUserToGroup = async (chat, userID) => {
+    setUserDelAddLoading(true);
+    const popedSelectedChatArray = await myAllChats.filter((FilChat) => {
+      return selectedChat._id !== FilChat._id;
+    });
+    const selectedGroupUserIds = await chat.users.map((users) => {
+      return users._id;
+    });
+    const loggedUserRemovedUserIds = await selectedGroupUserIds.filter((ids) => {
+      return ids !== user.result._id;
+    });
+
     if (selectedChat.users.find((u) => u._id === userID)) {
       alert("user already exists");
     } else {
-      setUserDelLoading(true);
+      const {data} = await AddGroupUser(chat._id, userID);
 
-      const {data} = await AddGroupUser(chatID, userID);
-      setSelectedChat(data);
-      chats();
-      setUserDelLoading(false);
+      socket.emit("group-edit", data, loggedUserRemovedUserIds);
+
+      dispatch(resetSortAllChats({selectedChat: data, popedSelectedChatArray: popedSelectedChatArray}));
+      dispatch(setSelectedChat(data));
+      // setUserDelLoading(false);
     }
+    setUserDelAddLoading(false);
   };
 
   return (
     <>
-      <Button variant="dark" style={{float: "right"}} onClick={() => setModalShow1(true)}>
+      <Button variant="dark" style={{float: "right"}} onClick={() => setChatOptionModalShow(true)}>
         <i className="fas fa-ellipsis-v"></i>
       </Button>
 
       <Modal
-        show={modalShow1}
-        onHide={() => setModalShow1(false)}
+        show={chatOptionModalShow}
+        onHide={() => setChatOptionModalShow(false)}
         size="md"
         aria-labelledby="contained-modal-title-vcenter"
         centered
       >
         <Modal.Header style={{display: "block"}}>
-          {selectedChat.isGroupChat ? (
+          {selectedChat._id && selectedChat.isGroupChat ? (
             <>
               <h5 style={{marginBottom: "15px", textAlign: "center"}}>
                 {selectedChat.chatName}
@@ -138,14 +158,14 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
             selectedChat.users.map((selectedUsers) => (
               <Badge key={selectedUsers._id} pill className="mx-1" variant="primary">
                 {selectedUsers.firstName}
-                <span onClick={() => delAGroupUser(selectedChat._id, selectedUsers._id)} style={{cursor: "pointer"}}>
-                  {" "}
+                <span onClick={() => delAGroupUserHandler(selectedChat, selectedUsers._id)} style={{cursor: "pointer"}}>
+                  &nbsp;&nbsp;
                   <b>X</b>
                 </span>
               </Badge>
             ))}
-          {userDelLoading && (
-            <ClipLoader loading={userDelLoading} speedMultiplier={2} color={"blue"} css={btnoverride} size={17} />
+          {userDelAddLoading && (
+            <ClipLoader loading={userDelAddLoading} speedMultiplier={2} color={"blue"} css={btnoverride} size={17} />
           )}
         </Modal.Header>
         <Modal.Body>
@@ -158,32 +178,30 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
                   placeholder="Rename Group"
                   style={{width: "100%", borderRadius: "20px"}}
                   className="my-3 mr-2"
-                  //   name="manager"
                 />
                 <Button
                   variant="success"
                   style={{width: "130px"}}
-                  onClick={() => renameGroupSubmit(selectedChat._id, newGName)}
+                  onClick={() => renameGroupSubmit(selectedChat, newGroupName)}
                 >
                   Update
                 </Button>
               </div>
               <div style={{display: "flex", alignItems: "center"}}>
                 <FormControl
-                  onChange={filter}
+                  onChange={(e) => onAllOrgUsersSearchChange(e, user.result._id, allOrgUsers, dispatch)}
                   type="text"
                   placeholder="Search New User to add"
                   style={{width: "100%", borderRadius: "20px"}}
                   className="my-3 mr-2"
-                  //   name="manager"
                 />
               </div>
               <Modal.Body style={{maxHeight: "170px", overflowX: "auto"}}>
-                {foundToAddUsers &&
-                  foundToAddUsers.map((users, i) => (
+                {filteredAllOrgUsers &&
+                  filteredAllOrgUsers.map((users, i) => (
                     <Button
                       key={users._id}
-                      onClick={() => addUserToGroup(selectedChat._id, users._id)}
+                      onClick={() => addUserToGroup(selectedChat, users._id)}
                       className="my-1"
                       variant="light"
                       style={{display: "block", width: "100%", textAlign: "left"}}
@@ -207,11 +225,11 @@ const ChatProfileModal = ({selectedChat, allUsers, setSelectedChat, chats, setMy
         </Modal.Body>
         <Modal.Footer>
           {selectedChat.isGroupChat && (
-            <Button onClick={() => delAGroupUser(selectedChat._id, user.result._id)} variant="danger">
+            <Button onClick={() => delAGroupUserHandler(selectedChat._id, user.result._id)} variant="danger">
               Leave Group
             </Button>
           )}
-          <Button onClick={() => setModalShow1(false)}>Close</Button>
+          <Button onClick={() => setChatOptionModalShow(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
     </>

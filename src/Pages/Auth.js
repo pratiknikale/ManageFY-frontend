@@ -1,10 +1,11 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {Container, Button, Form} from "react-bootstrap";
 import {signup, signin} from "../services/api";
 import {useNavigate} from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
 import {css} from "@emotion/react";
 import "../styles/auth.css";
+import {useSelector} from "react-redux/es/exports";
 
 const defaultFormFields = {
   FirstName: "",
@@ -27,6 +28,8 @@ const btnoverride = css`
 
 const Auth = () => {
   const navigate = useNavigate();
+
+  const user = useSelector((state) => state.user.user);
   const [isSignup, setIsSignup] = useState(false);
   const [FormData, setFormFields] = useState(defaultFormFields);
   // const [ManagerFormData, setManagerFormData] = useState(defaultManagerFormFields);
@@ -36,6 +39,12 @@ const Auth = () => {
   const onFieldChange = (e) => {
     setFormFields({...FormData, [e.target.name]: e.target.value});
   };
+
+  useEffect(() => {
+    if (user.token) {
+      navigate("/mytasks");
+    }
+  }, [user]);
 
   // const onManagerFieldChange = (e) => {
   //   setManagerFormData({...ManagerFormData, [e.target.name]: e.target.value});

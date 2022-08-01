@@ -15,6 +15,7 @@ import {useState, createContext, useEffect} from "react";
 import {useSelector} from "react-redux";
 import Settings from "./Pages/Settings";
 import Footer from "./mycomponents/Footer";
+import {SocketContext, socket} from "./context/socket";
 
 export const AppContext = createContext(null);
 
@@ -31,23 +32,25 @@ const App = () => {
     >
       <BrowserRouter>
         <Header />
-        {user.result && <Sidebar />}
-        <div className={user.result ? "mainContainer" : "notLoggedMainContainer"}>
-          <Routes>
-            <Route exact path="/" element={<Auth />} />
-            <Route element={<ProtectedRoute />}>
-              <Route exact path="/mytasks" element={<TList />} />
-              <Route element={<ProtectedManagerRoute />}>
-                <Route exact path="/ManageEmployee" element={<ManageEmployee />} />
-                <Route exact path="/ManageManager" element={<ManageManager />} />
-                <Route exact path="/Assigned" element={<Assigned />} />
+        <SocketContext.Provider value={socket}>
+          {user.result && <Sidebar />}
+          <div className={user.result ? "mainContainer" : "notLoggedMainContainer"}>
+            <Routes>
+              <Route exact path="/" element={<Auth />} />
+              <Route element={<ProtectedRoute />}>
+                <Route exact path="/mytasks" element={<TList />} />
+                <Route element={<ProtectedManagerRoute />}>
+                  <Route exact path="/ManageEmployee" element={<ManageEmployee />} />
+                  <Route exact path="/ManageManager" element={<ManageManager />} />
+                  <Route exact path="/Assigned" element={<Assigned />} />
+                </Route>
+                <Route exact path="/Chats" element={<Chats />} />
+                <Route exact path="/Settings" element={<Settings />} />
               </Route>
-              <Route exact path="/Chats" element={<Chats />} />
-              <Route exact path="/Settings" element={<Settings />} />
-            </Route>
-          </Routes>
-          <Footer />
-        </div>
+            </Routes>
+            <Footer />
+          </div>
+        </SocketContext.Provider>
       </BrowserRouter>
     </AppContext.Provider>
   );
