@@ -148,50 +148,79 @@ const Auth = () => {
               {isSignup && (
                 <>
                   <Form.Group controlId="formBasicFirstName">
-                    <Form.Label className="authFormLabels">First Name</Form.Label>
+                    {/* <Form.Label className="authFormLabels">First Name</Form.Label> */}
                     <Form.Control
                       onChange={(e) => onFieldChange(e)}
                       name="FirstName"
                       type="text"
                       defaultValue=""
-                      placeholder="Enter First Name"
+                      placeholder="First Name"
+                      style={{
+                        width: "100%",
+                        borderRadius: "20px",
+                        color: "#b9b9b9",
+                        backgroundColor: "#212529",
+                        borderColor: "transparent",
+                      }}
                       required
                     />
                   </Form.Group>
                   <Form.Group controlId="formBasicLastName">
-                    <Form.Label className="authFormLabels">Last Name</Form.Label>
+                    {/* <Form.Label className="authFormLabels">Last Name</Form.Label> */}
                     <Form.Control
                       onChange={(e) => onFieldChange(e)}
                       name="LastName"
                       type="text"
                       defaultValue=""
-                      placeholder="Enter Last Name"
+                      placeholder="Last Name"
+                      style={{
+                        width: "100%",
+                        borderRadius: "20px",
+                        color: "#b9b9b9",
+                        backgroundColor: "#212529",
+                        borderColor: "transparent",
+                      }}
                       required
                     />
                   </Form.Group>
                 </>
               )}
               <Form.Group controlId="formBasicEmail">
-                <Form.Label className="authFormLabels">Email address</Form.Label>
+                {/* <Form.Label className="authFormLabels">Email address</Form.Label> */}
                 <Form.Control
                   onChange={(e) => onFieldChange(e)}
                   name="Email"
                   type="email"
                   defaultValue=""
-                  placeholder="Enter email"
+                  placeholder="Email"
+                  style={{
+                    width: "100%",
+                    borderRadius: "20px",
+                    color: "#b9b9b9",
+                    backgroundColor: "#212529",
+                    borderColor: "transparent",
+                  }}
                   required
                 />
               </Form.Group>
 
               <Form.Group controlId="formBasicPassword">
-                <Form.Label className="authFormLabels">Password</Form.Label>
+                {/* <Form.Label className="authFormLabels">Password</Form.Label> */}
                 <Form.Control
                   onChange={(e) => onFieldChange(e)}
                   name="Password"
                   type={showPassword ? "text" : "password"}
                   defaultValue=""
                   placeholder="Password"
-                  style={{position: "relative", display: "inline"}}
+                  style={{
+                    position: "relative",
+                    display: "inline",
+                    width: "100%",
+                    borderRadius: "20px",
+                    color: "#b9b9b9",
+                    backgroundColor: "#212529",
+                    borderColor: "transparent",
+                  }}
                   required
                 />
                 {showPassword ? (
@@ -206,6 +235,7 @@ const Auth = () => {
             {/* {!isManager && ( */}
             <Button
               // disabled={isManager}
+              style={{borderRadius: "20px"}}
               className="authFormBtns1"
               onClick={() => {
                 setIsSignup((prevIsSignup) => !prevIsSignup);
@@ -225,7 +255,13 @@ const Auth = () => {
           >
             {isManager ? "Employee Signin" : "Manager Signin"}
           </Button> */}
-            <Button className="authFormBtns3" variant="primary" type="submit" disabled={isSinginSignupLoading}>
+            <Button
+              className="authFormBtns3"
+              style={{borderRadius: "20px"}}
+              variant="primary"
+              type="submit"
+              disabled={isSinginSignupLoading}
+            >
               {isSinginSignupLoading && (
                 <ClipLoader
                   loading={isSinginSignupLoading}

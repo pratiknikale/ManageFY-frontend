@@ -39,7 +39,7 @@
 }
 
 .authDivider {
-  background-color: white;
+  background-color: black;
   margin-top: 40px;
   width: 80%;
 }
@@ -62,4 +62,5 @@
   position: absolute;
   padding: 0.65rem;
   margin-left: -40px;
+  color: #b9b9b9;
 }
