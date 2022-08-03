@@ -15,6 +15,7 @@ const Sidebar = () => {
   const user = useSelector((state) => state.user.user);
   const filteredChats = useSelector((state) => state.chat.filteredChats);
   const selectedChat = useSelector((state) => state.chat.selectedChat);
+  const allChatsFetched = useSelector((state) => state.chat.allChatsFetched);
 
   const SelectedChatRef = React.useRef(selectedChat);
   const FilteredChatsRef = React.useRef(filteredChats);
@@ -33,6 +34,21 @@ const Sidebar = () => {
         dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
       }
       dispatch(receivedNewMsg(message));
+    } else {
+      if (allChatsFetched) {
+        console.log("into /Chats");
+        let popedSelectedChatArray = await filteredChats.filter((filChat) => {
+          return chat._id !== filChat._id;
+        });
+
+        if (filteredChats.length > 0) {
+          if (filteredChats[0]._id !== chat._id) {
+            dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+          }
+        } else {
+          dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+        }
+      }
     }
   };
 

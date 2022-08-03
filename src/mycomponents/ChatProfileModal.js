@@ -8,6 +8,7 @@ import {useSelector, useDispatch} from "react-redux";
 import {delAGroupUser, setSelectedChat, resetSortAllChats} from "../features/chat/chatSlice";
 import {onAllOrgUsersSearchChange} from "../handler/chatHandler";
 import {SocketContext} from "../context/socket";
+import "../styles/ChatProfileModal.css";
 
 const btnoverride = css`
   display: inline-block;
@@ -134,7 +135,9 @@ const ChatProfileModal = () => {
         aria-labelledby="contained-modal-title-vcenter"
         centered
       >
-        <Modal.Header style={{display: "block"}}>
+        <Modal.Header
+          style={{display: "block", backgroundColor: "#343a40", color: "white", borderBottom: "1px solid black"}}
+        >
           {selectedChat._id && selectedChat.isGroupChat ? (
             <>
               <h5 style={{marginBottom: "15px", textAlign: "center"}}>
@@ -156,7 +159,7 @@ const ChatProfileModal = () => {
 
           {selectedChat.isGroupChat &&
             selectedChat.users.map((selectedUsers) => (
-              <Badge key={selectedUsers._id} pill className="mx-1" variant="primary">
+              <Badge key={selectedUsers._id} pill className="mx-1" style={{backgroundColor: "black", color: "#b7b7b7"}}>
                 {selectedUsers.firstName}
                 <span onClick={() => delAGroupUserHandler(selectedChat, selectedUsers._id)} style={{cursor: "pointer"}}>
                   &nbsp;&nbsp;
@@ -168,7 +171,7 @@ const ChatProfileModal = () => {
             <ClipLoader loading={userDelAddLoading} speedMultiplier={2} color={"blue"} css={btnoverride} size={17} />
           )}
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{backgroundColor: "#343a40", color: "white"}}>
           {selectedChat.isGroupChat && (
             <>
               <div style={{display: "flex", alignItems: "center"}}>
@@ -176,12 +179,17 @@ const ChatProfileModal = () => {
                   onChange={(e) => onRenameGroupChange(e)}
                   type="text"
                   placeholder="Rename Group"
-                  style={{width: "100%", borderRadius: "20px"}}
+                  style={{
+                    width: "100%",
+                    borderRadius: "20px",
+                    color: "#b9b9b9",
+                    backgroundColor: "#212529",
+                    borderColor: "transparent",
+                  }}
                   className="my-3 mr-2"
                 />
                 <Button
-                  variant="success"
-                  style={{width: "130px"}}
+                  style={{width: "130px", borderRadius: "100px", backgroundColor: "black", borderColor: "transparent"}}
                   onClick={() => renameGroupSubmit(selectedChat, newGroupName)}
                 >
                   Update
@@ -192,7 +200,13 @@ const ChatProfileModal = () => {
                   onChange={(e) => onAllOrgUsersSearchChange(e, user.result._id, allOrgUsers, dispatch)}
                   type="text"
                   placeholder="Search New User to add"
-                  style={{width: "100%", borderRadius: "20px"}}
+                  style={{
+                    width: "100%",
+                    borderRadius: "20px",
+                    color: "#b9b9b9",
+                    backgroundColor: "#212529",
+                    borderColor: "transparent",
+                  }}
                   className="my-3 mr-2"
                 />
               </div>
@@ -204,13 +218,20 @@ const ChatProfileModal = () => {
                       onClick={() => addUserToGroup(selectedChat, users._id)}
                       className="my-1"
                       variant="light"
-                      style={{display: "block", width: "100%", textAlign: "left"}}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        backgroundColor: "#495057",
+                        color: "#b7b7b7",
+                        borderColor: "transparent",
+                      }}
                     >
                       <Row>
-                        <Col sm={1} style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                        <Col sm={1} style={{display: "flex", alignItems: "center"}}>
                           <i className="far fa-user fa-2x mr-3"></i>
                         </Col>
-                        <Col sm={11} style={{paddingTop: "14px"}}>
+                        <Col sm={11} style={{paddingTop: "14px", paddingLeft: "24px"}}>
                           {users.firstName} {users.lastName}
                           <p style={{fontSize: "14px"}}>
                             <b>Email</b>: {users.email}
@@ -223,13 +244,21 @@ const ChatProfileModal = () => {
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{backgroundColor: "#343a40", color: "white", borderTop: "1px solid black"}}>
           {selectedChat.isGroupChat && (
-            <Button onClick={() => delAGroupUserHandler(selectedChat._id, user.result._id)} variant="danger">
-              Leave Group
+            <Button
+              onClick={() => delAGroupUserHandler(selectedChat._id, user.result._id)}
+              style={{borderRadius: "100px", backgroundColor: "black", borderColor: "transparent", color: "red"}}
+            >
+              <b>Leave Group</b>
             </Button>
           )}
-          <Button onClick={() => setChatOptionModalShow(false)}>Close</Button>
+          <Button
+            onClick={() => setChatOptionModalShow(false)}
+            style={{borderRadius: "100px", backgroundColor: "black", borderColor: "transparent"}}
+          >
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
     </>

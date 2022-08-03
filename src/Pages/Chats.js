@@ -1,5 +1,18 @@
+import chatImage from "../images/chatImg2.png";
 import React, {useState, useEffect, useContext} from "react";
-import {Button, Container, Form, FormControl, Row, Col, OverlayTrigger, Tooltip, Modal, Badge} from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Form,
+  FormControl,
+  Row,
+  Col,
+  OverlayTrigger,
+  Tooltip,
+  Modal,
+  Badge,
+  Image,
+} from "react-bootstrap";
 import "../styles/Chat.css";
 import {getSender} from "../config/chatLogics";
 import ChatProfileModal from "../mycomponents/ChatProfileModal";
@@ -16,6 +29,7 @@ import {
   setGroupChatCreateModel,
   GetAsyncCreateSingleChat,
   newGroupChatSubmit,
+  setAllChatsFetched,
 } from "../features/chat/chatSlice";
 import {
   myAllChatsSearchHandler,
@@ -47,6 +61,7 @@ const Chats = () => {
   const selectedChat = useSelector((state) => state.chat.selectedChat);
   const singleChatModel = useSelector((state) => state.chat.singleUserChatCreateModel);
   const groupChatModel = useSelector((state) => state.chat.groupChatCreateModel);
+  const allChatsFetched = useSelector((state) => state.chat.allChatsFetched);
   // data
 
   // loaders
@@ -60,11 +75,12 @@ const Chats = () => {
   // useState Hooks
 
   useEffect(() => {
-    if (myAllChats.length < 1) {
+    if (!allChatsFetched) {
       setMyAllChatsLoading(true);
       dispatch(fetchAsyncMyAllChats()).then(() => {
         setMyAllChatsLoading(false);
       });
+      dispatch(setAllChatsFetched());
     }
 
     return () => dispatch(setSelectedChat({})); // cleanup function
@@ -196,7 +212,10 @@ const Chats = () => {
                   filteredChats.map((chat, i) => (
                     <li className="side-menuLI" key={chat._id} style={{cursor: "pointer"}}>
                       <a
-                        onClick={() => dispatch(setSelectedChat(chat))}
+                        onClick={() => {
+                          dispatch(setSelectedChat(chat));
+                          setShowEmoji(false);
+                        }}
                         className="side-menuItems"
                         style={
                           selectedChat && selectedChat._id === chat._id
@@ -248,7 +267,7 @@ const Chats = () => {
               height: "100%",
             }}
           >
-            {selectedChat._id && (
+            {selectedChat._id ? (
               <>
                 <MessagesBox />
                 <div
@@ -265,7 +284,7 @@ const Chats = () => {
                     <Picker onEmojiClick={handleEmojiClick} pickerStyle={{position: "absolute", bottom: "60px"}} />
                   )}
                   <BsEmojiSmileFill
-                    onClick={emojiHideShowHandler}
+                    onClick={() => emojiHideShowHandler()}
                     style={{color: showEmoji && "#16191c", margin: "5px", marginRight: "8px"}}
                   ></BsEmojiSmileFill>
                   <FormControl
@@ -301,6 +320,22 @@ const Chats = () => {
                   />
                 </div>
               </>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    paddingBottom: "10px",
+                    height: "100%",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image src={chatImage} style={{width: "220px", borderRadius: "100px"}} fluid />
+                  <span style={{color: "grey", padding: "40px"}}>Select a chat to start messaging.</span>
+                </div>
+              </>
             )}
           </Col>
         </Row>
@@ -313,23 +348,45 @@ const Chats = () => {
             dispatch(setfilteredAllOrgUsers(allOrgUsers));
             dispatch(setSingleUserChatCreateModel());
           }}
-          size="lg"
+          size="md"
           aria-labelledby="contained-modal-title-vcenter"
           centered
         >
-          <Modal.Header style={{flexDirection: "column", alignItems: "center"}}>
+          <Modal.Header
+            style={{
+              flexDirection: "column",
+              alignItems: "center",
+              backgroundColor: "#343a40",
+              color: "white",
+              borderBottom: "1px solid black",
+            }}
+          >
             <span style={{margin: "14px", fontSize: "20px"}}>New Chat</span>
             <FormControl
               onChange={(e) => onAllOrgUsersSearchChange(e, user.result._id, allOrgUsers, dispatch)}
               type="text"
               placeholder="Search"
-              style={{width: "100%", borderRadius: "20px"}}
+              style={{
+                width: "100%",
+                borderRadius: "20px",
+                color: "#b9b9b9",
+                backgroundColor: "#212529",
+                borderColor: "transparent",
+              }}
               className="mr-sm-2"
               name="manager"
               autoComplete="off"
             />
           </Modal.Header>
-          <Modal.Body style={{height: "300px", overflowX: "hidden", overflowY: "scroll"}}>
+          <Modal.Body
+            style={{
+              height: "300px",
+              overflowX: "hidden",
+              overflowY: "scroll",
+              backgroundColor: "#343a40",
+              color: "white",
+            }}
+          >
             {filteredAllOrgUsers.map((user, i) => (
               <Button
                 key={user._id}
@@ -340,10 +397,17 @@ const Chats = () => {
                 }}
                 className="my-1"
                 variant="light"
-                style={{display: "block", width: "100%", textAlign: "left"}}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  backgroundColor: "#495057",
+                  color: "#b7b7b7",
+                  borderColor: "transparent",
+                }}
               >
                 <Row>
-                  <Col sm={1} style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                  <Col sm={1} style={{display: "flex", alignItems: "center"}}>
                     <i className="far fa-user fa-2x mr-3"></i>
                   </Col>
                   <Col sm={11} style={{paddingTop: "14px"}}>
@@ -356,8 +420,9 @@ const Chats = () => {
               </Button>
             ))}
           </Modal.Body>
-          <Modal.Footer>
+          <Modal.Footer style={{backgroundColor: "#343a40", color: "white", borderTop: "1px solid black"}}>
             <Button
+              style={{borderRadius: "100px", backgroundColor: "black", borderColor: "transparent"}}
               onClick={() => {
                 dispatch(setfilteredAllOrgUsers(allOrgUsers));
                 dispatch(setSingleUserChatCreateModel());
@@ -379,17 +444,25 @@ const Chats = () => {
             setSelectedGroupUsers([]);
             dispatch(setfilteredAllOrgUsers(allOrgUsers));
           }}
-          size="lg"
+          size="md"
           aria-labelledby="contained-modal-title-vcenter"
           centered
         >
-          <Modal.Header style={{display: "block"}}>
+          <Modal.Header
+            style={{display: "block", backgroundColor: "#343a40", color: "white", borderBottom: "1px solid black"}}
+          >
             <h4 style={{textAlign: "center", marginBottom: "30px"}}>Create New Group</h4>
             <FormControl
               onChange={(e) => onGroupNameChange(e)}
               type="text"
               placeholder="Group Name"
-              style={{width: "100%", borderRadius: "20px"}}
+              style={{
+                width: "100%",
+                borderRadius: "20px",
+                color: "#b9b9b9",
+                backgroundColor: "#212529",
+                borderColor: "transparent",
+              }}
               className="my-3 mr-5"
               name="manager"
               autoComplete="off"
@@ -398,13 +471,24 @@ const Chats = () => {
               onChange={(e) => onAllOrgUsersSearchChange(e, user.result._id, allOrgUsers, dispatch)}
               type="text"
               placeholder="Search users to add"
-              style={{width: "100%", borderRadius: "20px"}}
+              style={{
+                width: "100%",
+                borderRadius: "20px",
+                color: "#b9b9b9",
+                backgroundColor: "#212529",
+                borderColor: "transparent",
+              }}
               className="my-3 mr-5"
               name="manager"
             />
             {selectedGroupUsers &&
               selectedGroupUsers.map((selectedUser) => (
-                <Badge key={selectedUser._id} pill className="mx-1" variant="primary">
+                <Badge
+                  key={selectedUser._id}
+                  pill
+                  className="mx-1"
+                  style={{backgroundColor: "black", color: "#b7b7b7"}}
+                >
                   {selectedUser.firstName}
                   <span onClick={() => deleteSelectUser(selectedUser)} style={{cursor: "pointer"}}>
                     {" "}
@@ -413,7 +497,7 @@ const Chats = () => {
                 </Badge>
               ))}
           </Modal.Header>
-          <Modal.Body style={{height: "300px", overflowX: "auto"}}>
+          <Modal.Body style={{height: "300px", overflowX: "auto", backgroundColor: "#343a40", color: "white"}}>
             {filteredAllOrgUsers.map((users, i) => (
               <Button
                 key={users._id}
@@ -426,13 +510,20 @@ const Chats = () => {
                 }}
                 className="my-1"
                 variant="light"
-                style={{display: "block", width: "100%", textAlign: "left"}}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  backgroundColor: "#495057",
+                  color: "#b7b7b7",
+                  borderColor: "transparent",
+                }}
               >
                 <Row>
-                  <Col sm={1} style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                  <Col sm={1} style={{display: "flex", alignItems: "center"}}>
                     <i className="far fa-user fa-2x mr-3"></i>
                   </Col>
-                  <Col sm={11} style={{paddingTop: "14px"}}>
+                  <Col sm={11} style={{paddingTop: "14px", paddingLeft: "24px"}}>
                     {users.firstName} {users.lastName}
                     <p style={{fontSize: "14px"}}>
                       <b>Email</b>: {users.email}
@@ -442,9 +533,9 @@ const Chats = () => {
               </Button>
             ))}
           </Modal.Body>
-          <Modal.Footer>
+          <Modal.Footer style={{backgroundColor: "#343a40", color: "white", borderTop: "1px solid black"}}>
             <Button
-              variant="success"
+              style={{borderRadius: "100px", backgroundColor: "black", borderColor: "transparent", color: "green"}}
               onClick={() => {
                 dispatch(
                   newGroupChatSubmit({groupName: groupName, selectedGroupUsers: selectedGroupUsers, socket: socket})
@@ -454,9 +545,10 @@ const Chats = () => {
                 dispatch(setfilteredAllOrgUsers(allOrgUsers));
               }}
             >
-              Create Group
+              <b>Create Group</b>
             </Button>
             <Button
+              style={{borderRadius: "100px", backgroundColor: "black", borderColor: "transparent"}}
               onClick={() => {
                 dispatch(setGroupChatCreateModel());
                 setSelectedGroupUsers([]);
