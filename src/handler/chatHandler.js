@@ -72,7 +72,7 @@ export const handleSendMessage = async (
 
       // returns an array of chats with removed selected chat from it so that to add selected chat on the top
       let popedSelectedChatArray = await myAllChats.filter((chat) => {
-        return selectedChat !== chat;
+        return selectedChat._id !== chat._id;
       });
 
       if (myAllChats[0]._id !== selectedChat._id) {

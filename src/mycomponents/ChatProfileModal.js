@@ -124,7 +124,11 @@ const ChatProfileModal = () => {
 
   return (
     <>
-      <Button variant="dark" style={{float: "right"}} onClick={() => setChatOptionModalShow(true)}>
+      <Button
+        variant="dark"
+        style={{float: "right", borderRadius: "100px"}}
+        onClick={() => setChatOptionModalShow(true)}
+      >
         <i className="fas fa-ellipsis-v"></i>
       </Button>
 
@@ -247,7 +251,7 @@ const ChatProfileModal = () => {
         <Modal.Footer style={{backgroundColor: "#343a40", color: "white", borderTop: "1px solid black"}}>
           {selectedChat.isGroupChat && (
             <Button
-              onClick={() => delAGroupUserHandler(selectedChat._id, user.result._id)}
+              onClick={() => delAGroupUserHandler(selectedChat, user.result._id)}
               style={{borderRadius: "100px", backgroundColor: "black", borderColor: "transparent", color: "red"}}
             >
               <b>Leave Group</b>

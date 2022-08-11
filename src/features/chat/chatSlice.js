@@ -3,8 +3,9 @@ import {GetChats, GetCreateSingleChat, CreateGroup, RemoveGroupUser} from "../..
 
 const initialState = {
   myAllChats: [],
-  allChatsFetched: false,
   filteredChats: [],
+  allChatsFetched: false,
+  notificationChatIds: [],
   selectedChat: {},
   singleUserChatCreateModel: false,
   groupChatCreateModel: false,
@@ -92,6 +93,15 @@ export const chatSlice = createSlice({
     setAllChatsFetched: (state) => {
       state.allChatsFetched = !state.allChatsFetched;
     },
+    setNotificationChatIds: (state, {payload}) => {
+      return {...state, notificationChatIds: [...payload]};
+    },
+    newChatNotification: (state, {payload}) => {
+      return {...state, notificationChatIds: [...state.notificationChatIds, payload]};
+    },
+    setNotificationChatRead: (state, {payload}) => {
+      return {...state, notificationChatIds: payload};
+    },
   },
   extraReducers: {
     [fetchAsyncMyAllChats.fulfilled]: (state, {payload}) => {
@@ -139,6 +149,9 @@ export const {
   setGroupChatCreateModel,
   receiveAddNewChat,
   setAllChatsFetched,
+  setNotificationChatIds,
+  newChatNotification,
+  setNotificationChatRead,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

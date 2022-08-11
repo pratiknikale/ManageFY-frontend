@@ -73,7 +73,7 @@ const ManageEmployee = () => {
   };
 
   const deleteUser = async (id, i) => {
-    var answer = window.confirm("Are you sure? All the data for selected user will be deleted");
+    var answer = window.confirm("Are you sure? All the data for selected user will also be deleted");
     if (answer) {
       // let isDelloading = delTaskLoading.slice();
       // isDelloading[i] = true;
@@ -124,7 +124,6 @@ const ManageEmployee = () => {
               className="mr-sm-2"
               autoComplete="off"
             />
-            {/* <Button variant="outline-success">Search</Button> */}
           </Form>
           <Button className="float-right" variant="outline-light">
             Create new employee profile

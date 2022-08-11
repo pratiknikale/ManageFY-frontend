@@ -21,15 +21,14 @@ import moment from "moment";
 import ClipLoader from "react-spinners/ClipLoader";
 import {css} from "@emotion/react";
 import {useSelector, useDispatch} from "react-redux";
-import {fetchallOrgUsers, setfilteredAllOrgUsers} from "../features/user/userSlice";
+import {setfilteredAllOrgUsers} from "../features/user/userSlice";
 import {
-  fetchAsyncMyAllChats,
   setSelectedChat,
   setSingleUserChatCreateModel,
   setGroupChatCreateModel,
   GetAsyncCreateSingleChat,
   newGroupChatSubmit,
-  setAllChatsFetched,
+  setNotificationChatRead,
 } from "../features/chat/chatSlice";
 import {
   myAllChatsSearchHandler,
@@ -40,6 +39,7 @@ import {
 import {BsEmojiSmileFill} from "react-icons/bs";
 import Picker from "emoji-picker-react";
 import {SocketContext} from "../context/socket";
+import {setChatMessageRead} from "../services/api";
 
 const btnoverride = css`
   display: inline-block;
@@ -61,7 +61,7 @@ const Chats = () => {
   const selectedChat = useSelector((state) => state.chat.selectedChat);
   const singleChatModel = useSelector((state) => state.chat.singleUserChatCreateModel);
   const groupChatModel = useSelector((state) => state.chat.groupChatCreateModel);
-  const allChatsFetched = useSelector((state) => state.chat.allChatsFetched);
+  const notificationChatIds = useSelector((state) => state.chat.notificationChatIds);
   // data
 
   // loaders
@@ -75,24 +75,19 @@ const Chats = () => {
   // useState Hooks
 
   useEffect(() => {
-    if (!allChatsFetched) {
-      setMyAllChatsLoading(true);
-      dispatch(fetchAsyncMyAllChats()).then(() => {
-        setMyAllChatsLoading(false);
-      });
-      dispatch(setAllChatsFetched());
-    }
-
-    return () => dispatch(setSelectedChat({})); // cleanup function
-  }, [dispatch]);
-
-  useEffect(() => {
     window.scrollTo({top: 0, left: 0});
   }, []);
 
-  useEffect(() => {
-    user.result && dispatch(fetchallOrgUsers(user.result._id));
-  }, [user]);
+  const selectedChatHandler = async (chat, index) => {
+    let newChatNotificationArray = notificationChatIds.filter((filChatIds) => {
+      return filChatIds !== chat._id;
+    });
+
+    dispatch(setSelectedChat(chat));
+
+    dispatch(setNotificationChatRead(newChatNotificationArray));
+    setChatMessageRead(chat._id, user.result._id, false); //api call
+  };
 
   const emojiHideShowHandler = () => {
     setShowEmoji(!showEmoji);
@@ -120,9 +115,9 @@ const Chats = () => {
 
   return (
     <>
-      <h4 style={{marginTop: "25px", marginBottom: "25px", marginLeft: "25px", color: "white"}}>Chats</h4>
+      <h4 style={{marginTop: "25px", marginBottom: "10px", marginLeft: "25px", color: "white"}}>Chats</h4>
 
-      <Container fluid style={{marginBottom: "50px", maxWidth: "94%", flex: "1 0 auto"}}>
+      <Container fluid style={{flex: "1 0 auto"}}>
         <Row className="mx-5" style={{height: "50px"}}>
           <Col
             xs={4}
@@ -153,7 +148,11 @@ const Chats = () => {
                 </Tooltip>
               }
             >
-              <Button variant="dark" onClick={() => dispatch(setSingleUserChatCreateModel())}>
+              <Button
+                variant="dark"
+                style={{borderRadius: "100px"}}
+                onClick={() => dispatch(setSingleUserChatCreateModel())}
+              >
                 <i className="fas fa-plus"></i>
               </Button>
             </OverlayTrigger>
@@ -166,7 +165,12 @@ const Chats = () => {
                 </Tooltip>
               }
             >
-              <Button className="ml-2" variant="dark" onClick={() => dispatch(setGroupChatCreateModel())}>
+              <Button
+                className="ml-2"
+                variant="dark"
+                style={{borderRadius: "100px"}}
+                onClick={() => dispatch(setGroupChatCreateModel())}
+              >
                 <i className="fas fa-users"></i>
               </Button>
             </OverlayTrigger>
@@ -185,9 +189,20 @@ const Chats = () => {
             {selectedChat._id && (
               <>
                 {selectedChat.isGroupChat ? (
-                  <h5 style={{color: "white", marginBottom: "0px"}}>{selectedChat.chatName}</h5>
+                  <h5 className="chatSelectedHeader">
+                    <div className="chatSelectedHeaderIcon">
+                      <i className="fas fa-users"></i>
+                    </div>
+                    <span style={{paddingLeft: "10px"}}>{selectedChat.chatName}</span>
+                  </h5>
                 ) : (
-                  <h5 style={{color: "white", marginBottom: "0px"}}>{getSender(user.result, selectedChat.users)}</h5>
+                  <h5 className="chatSelectedHeader">
+                    {" "}
+                    <div className="chatSelectedHeaderIcon">
+                      <i className="fas fa-user"></i>
+                    </div>
+                    <span style={{paddingLeft: "10px"}}>{getSender(user.result, selectedChat.users)}</span>
+                  </h5>
                 )}
                 <ChatProfileModal />
               </>
@@ -209,32 +224,44 @@ const Chats = () => {
                     />
                   </p>
                 ) : (
-                  filteredChats.map((chat, i) => (
+                  filteredChats.map((chat, index) => (
                     <li className="side-menuLI" key={chat._id} style={{cursor: "pointer"}}>
                       <a
                         onClick={() => {
-                          dispatch(setSelectedChat(chat));
+                          selectedChatHandler(chat, index);
                           setShowEmoji(false);
                         }}
                         className="side-menuItems"
-                        style={
-                          selectedChat && selectedChat._id === chat._id
-                            ? {backgroundColor: "#16191c"}
-                            : {backgroundColor: "#1d2124"}
-                        }
+                        style={{
+                          paddingLeft: "15px",
+                          backgroundColor: selectedChat && selectedChat._id === chat._id ? "#16191c" : "#1d2124",
+                        }}
                       >
                         <Row style={{margin: "0px"}}>
                           <Col
-                            sm={1}
+                            sm={2}
                             style={{padding: "0px", display: "flex", justifyContent: "center", alignItems: "center"}}
                           >
-                            {chat.isGroupChat ? (
-                              <i className="fas fa-users mr-3" style={{width: "20px"}}></i>
-                            ) : (
-                              <i className="fas fa-user mr-3" style={{width: "20px"}}></i>
+                            {notificationChatIds.includes(chat._id) && (
+                              <Badge className="newChatMessageBadgeChat">1</Badge>
                             )}
+
+                            <div className="allChatsListIcon">
+                              {chat.isGroupChat ? <i className="fas fa-users"></i> : <i className="fas fa-user"></i>}
+                            </div>
                           </Col>
-                          <Col sm={11}>
+                          <Col sm={10} style={{paddingLeft: "6px"}}>
+                            <p
+                              style={{
+                                maxWidth: "20ch",
+                                overflow: "hidden",
+                                whiteSpace: "nowrap",
+                                margin: "0px",
+                                display: "inline-block",
+                                padding: "0px",
+                                textOverflow: "ellipsis",
+                              }}
+                            ></p>
                             {chat.isGroupChat ? chat.chatName : getSender(user.result, chat.users)}
                             <span style={{float: "right", fontSize: "11px", opacity: "0.5"}}>
                               {moment(chat.updatedAt).fromNow()}
@@ -249,6 +276,7 @@ const Chats = () => {
                           </Col>
                         </Row>
                       </a>
+                      <hr style={{backgroundColor: "#343a40", padding: "0px", margin: "0px"}}></hr>
                     </li>
                   ))
                 )}

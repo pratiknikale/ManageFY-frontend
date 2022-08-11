@@ -1,12 +1,15 @@
+.authContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
 .signinupForm {
   margin-top: 50px;
-  /* margin-left: 20%;
-  margin-right: 20%; */
-  /* border: solid lightgray; */
   padding: 30px;
   background: #343a40;
   border-radius: 10px;
-  /* box-shadow: 0px 0px 30px 0px white; */
 }
 
 .authFormLabels {
@@ -63,4 +66,48 @@
   padding: 0.65rem;
   margin-left: -40px;
   color: #b9b9b9;
+}
+
+.GradientText {
+  background: linear-gradient(to right, #ffc562, #c6bbff, #7e67dd, #ff9aad);
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+}
+
+.ButtonGradientBackground {
+  background: linear-gradient(to right, #c6bbff, #7e67dd, #ff9aad);
+}
+
+.AnimatedImage {
+  width: 100%;
+  height: 100%;
+  margin-top: -6%;
+}
+
+.HomeLandingPageSection {
+  /* width: 74%; */
+  /* margin-right: 350px; */
+  overflow-x: auto;
+  padding: 30px;
+  padding-top: 80px;
+}
+
+.HomeLandingPageSection::-webkit-scrollbar {
+  width: 0;
+}
+
+.HomeLandingSignInSection {
+  min-width: 400px;
+  padding: 30px;
+  background-color: #1d2124;
+}
+
+.formControl {
+  position: relative;
+  display: inline;
+  width: 100%;
+  border-radius: 20px;
+  color: #b9b9b9;
+  background-color: #212529;
+  border-color: transparent;
 }

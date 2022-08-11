@@ -1,0 +1,32 @@
+.taskFormInputs {
+  border-radius: 20px;
+  color: rgb(185, 185, 185);
+  border: hidden;
+  background-color: #343a40;
+}
+
+.taskFormInputs:focus {
+  background-color: #343a40;
+  color: rgb(185, 185, 185);
+}
+
+.EditDeleteButtons {
+  margin-right: 0.8rem;
+  height: 40px;
+  float: right;
+  display: flex;
+  align-items: center;
+  inline-size: max-content;
+  border-radius: 20px;
+}
+
+.StatusToggleButtons {
+  margin-right: 0.8rem;
+  width: 180px;
+  height: 40px;
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+}

@@ -21,17 +21,23 @@ export const getEdit = async (id) => {
   return await API.get(`/api/getId/${id}`);
 };
 
-export const editItem = async (id, data) => {
-  return await API.put("/api/edit", {id: id, data: data});
+export const editItem = async (id, data, location) => {
+  return await API.put("/api/edit", {id: id, data: data, location: location});
 };
 
-export const updateStatus = async (id, status, stask, subtaskIndex) => {
+export const updateSubTaskStatus = async (id, status, stask, subtaskIndex) => {
   //REVISIT ....can be better
-  return await API.put("/api/updateStatus", {id: id, status: status, stask: stask, subtaskIndex: subtaskIndex});
+  return await API.put("/api/updateSubTaskStatus", {id: id, status: status, stask: stask, subtaskIndex: subtaskIndex});
 };
 
-export const insertItem = async (item) => {
-  return await API.post("/api/insert", {item: item});
+export const updateFullTaskStatus = async (id, status) => {
+  //REVISIT ....can be better
+  return await API.put("/api/updateFullTaskStatus", {id: id, status: status});
+};
+
+export const insertNewTask = async (item, location) => {
+  // console.log(location);
+  return await API.post("/api/insert", {item: item, location: location});
 };
 
 export const deleteItem = async (id) => {
@@ -139,6 +145,15 @@ export const getMessages = async (chatId) => {
   return await API.get(`/Message/${chatId}`);
 };
 
-export const sendMessages = async (content, chatId) => {
-  return await API.post("/Message", {content: content, chatId: chatId});
+export const sendMessages = async (content, chatId, userOtherThanLoggedIDs) => {
+  return await API.post("/Message", {content: content, chatId: chatId, userOtherThanLoggedIDs: userOtherThanLoggedIDs});
+};
+
+export const setChatMessageRead = async (chatId, userId, timeStampUpdate) => {
+  return await API.put("/Chat/setChatMessageRead", {chatId: chatId, userId: userId, timeStampUpdate: timeStampUpdate});
+};
+
+export const getmanagersAssignedTsk = async (Id) => {
+  console.log(Id);
+  return await API.get(`/api/getmanagersAssignedTsk/${Id}`);
 };

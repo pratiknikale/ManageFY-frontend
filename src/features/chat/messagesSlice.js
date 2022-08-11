@@ -20,9 +20,9 @@ export const fetchAsyncSelectedChatMessages = createAsyncThunk(
 export const SendAsyncSelectedChatMessage = createAsyncThunk(
   "messages/SendAsyncSelectedChatMessage",
   async ({content, chat, socket, userOtherThanLoggedIDs}) => {
-    const response = await sendMessages(content, chat._id);
-    socket.emit("Send-Message", response.data, userOtherThanLoggedIDs, chat);
-    return response.data;
+    const response = await sendMessages(content, chat._id, userOtherThanLoggedIDs);
+    socket.emit("Send-Message", response.data.message, userOtherThanLoggedIDs, response.data.updatedChatResults);
+    return response.data.message;
   }
 );
 

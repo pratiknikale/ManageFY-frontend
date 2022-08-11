@@ -4,7 +4,18 @@ import {useSelector, useDispatch} from "react-redux";
 import "../styles/Sidebar.css";
 import {SocketContext} from "../context/socket";
 import {receivedNewMsg} from "../features/chat/messagesSlice";
-import {resetSortAllChats, setSelectedChat, receiveAddNewChat} from "../features/chat/chatSlice";
+import {
+  fetchAsyncMyAllChats,
+  setAllChatsFetched,
+  resetSortAllChats,
+  setSelectedChat,
+  receiveAddNewChat,
+  newChatNotification,
+  setNotificationChatIds,
+} from "../features/chat/chatSlice";
+import {fetchallOrgUsers} from "../features/user/userSlice";
+import {setChatMessageRead} from "../services/api";
+import {Badge} from "react-bootstrap";
 
 const Sidebar = () => {
   const dispatch = useDispatch();
@@ -16,38 +27,36 @@ const Sidebar = () => {
   const filteredChats = useSelector((state) => state.chat.filteredChats);
   const selectedChat = useSelector((state) => state.chat.selectedChat);
   const allChatsFetched = useSelector((state) => state.chat.allChatsFetched);
+  const notificationChatIds = useSelector((state) => state.chat.notificationChatIds);
 
   const SelectedChatRef = React.useRef(selectedChat);
   const FilteredChatsRef = React.useRef(filteredChats);
+  const allChatsFetchedRef = React.useRef(allChatsFetched);
   React.useEffect(() => {
     SelectedChatRef.current = selectedChat;
     FilteredChatsRef.current = filteredChats;
+    allChatsFetchedRef.current = allChatsFetched;
   });
 
-  const messageReceiveHandler = async (message, chat, selectedChat, filteredChats) => {
+  const messageReceiveHandler = async (message, chat, selectedChat, filteredChats, allChatsFetched) => {
     if (selectedChat._id && selectedChat._id === chat._id) {
+      let updatedChat = await setChatMessageRead(chat._id, user.result._id, true);
+
       let popedSelectedChatArray = await filteredChats.filter((filChat) => {
         return selectedChat._id !== filChat._id;
       });
-      dispatch(setSelectedChat(chat));
+      dispatch(setSelectedChat(updatedChat.data));
       if (filteredChats[0]._id !== chat._id) {
-        dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+        dispatch(resetSortAllChats({selectedChat: updatedChat.data, popedSelectedChatArray: popedSelectedChatArray}));
       }
       dispatch(receivedNewMsg(message));
     } else {
       if (allChatsFetched) {
-        console.log("into /Chats");
+        dispatch(newChatNotification(chat._id));
         let popedSelectedChatArray = await filteredChats.filter((filChat) => {
           return chat._id !== filChat._id;
         });
-
-        if (filteredChats.length > 0) {
-          if (filteredChats[0]._id !== chat._id) {
-            dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
-          }
-        } else {
-          dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
-        }
+        dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
       }
     }
   };
@@ -58,13 +67,21 @@ const Sidebar = () => {
     });
 
     dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+    dispatch(newChatNotification(chat._id));
   };
 
+  // chat related socket implimentation
   useEffect(() => {
     user && socket && socket.emit("setup", user.result._id);
 
     const newMsghandler = (message, chat) => {
-      messageReceiveHandler(message, chat, SelectedChatRef.current, FilteredChatsRef.current);
+      messageReceiveHandler(
+        message,
+        chat,
+        SelectedChatRef.current,
+        FilteredChatsRef.current,
+        allChatsFetchedRef.current
+      );
     };
     const grpEditHandler = (chat) => {
       newGroupEditedHandler(chat, FilteredChatsRef.current);
@@ -74,14 +91,49 @@ const Sidebar = () => {
 
     socket.on("Single-Chat-Created", (chat) => {
       dispatch(receiveAddNewChat(chat));
+      dispatch(newChatNotification(chat._id));
     });
 
     socket.on("new-group-chat", (chat) => {
       dispatch(receiveAddNewChat(chat));
+      dispatch(newChatNotification(chat._id));
     });
 
     socket.on("new-group-edited", grpEditHandler);
   }, [user, socket]);
+
+  // fetching all my chats, setting chat notifications and saving in redux state
+  useEffect(() => {
+    if (!allChatsFetched && user.result) {
+      // setMyAllChatsLoading(true);
+      dispatch(fetchAsyncMyAllChats()).then((allChats) => {
+        let notificationChats = allChats.payload.filter((filChat) => {
+          if (filChat.notificationUsers.length > 0) {
+            let loggedUserFound = filChat.notificationUsers.filter((filNotfyUser) => {
+              return filNotfyUser._id == user.result._id;
+            });
+            return loggedUserFound.length > 0 ? true : false;
+          }
+          return false;
+        });
+
+        let notificationChatIds = notificationChats.map((mapChat) => {
+          return mapChat._id;
+        });
+
+        dispatch(setNotificationChatIds(notificationChatIds));
+        // setMyAllChatsLoading(false);
+        dispatch(setAllChatsFetched());
+      });
+    }
+
+    return () => dispatch(setSelectedChat({})); // cleanup function
+  }, [dispatch, user]);
+
+  // fetching all org user and saving in redux state
+  useEffect(() => {
+    user.result && dispatch(fetchallOrgUsers(user.result._id));
+  }, [user]);
 
   return (
     <div className="Sidebar">
@@ -113,17 +165,17 @@ const Sidebar = () => {
           </>
         )}
         <li className="side-menuLI">
+          {notificationChatIds && notificationChatIds.length > 0 && <Badge className="newChatMessageBadge">1</Badge>}
           <NavLink to="/Chats" className="side-menuItems">
             <i style={{width: "33px"}} className="fas fa-comments"></i>Chats
-            {/* <i style={{width: "33px"}} className="fas fa-tasks"></i>Chats */}
           </NavLink>
         </li>
 
-        <li className="side-menuLI" style={{marginTop: "auto"}}>
+        {/* <li className="side-menuLI" style={{marginTop: "auto"}}>
           <NavLink to="/Settings" className="side-menuItems">
             <i style={{width: "33px"}} className="fa-solid fa-gear"></i>Settings
           </NavLink>
-        </li>
+        </li> */}
       </ul>
       {/* </div> */}
     </div>

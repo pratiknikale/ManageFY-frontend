@@ -1,3 +1,42 @@
 .emoji-picker-react {
   background-color: black;
 }
+
+.newChatMessageBadgeChat {
+  color: red;
+  background-color: red;
+  font-size: 6px;
+  width: 8px;
+  border-radius: 100px;
+  position: absolute;
+  margin-left: -55px;
+}
+
+.chatSelectedHeader {
+  color: white;
+  margin-bottom: 0px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.chatSelectedHeaderIcon {
+  padding: 8px;
+  border-radius: 150px;
+  font-size: 80%;
+  display: flex;
+  height: 33px;
+  background-color: rgb(255, 120, 65);
+  width: 33px;
+  justify-content: center;
+}
+
+.allChatsListIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 37px;
+  background-color: rgb(81, 107, 124);
+  height: 37px;
+  border-radius: 100px;
+}

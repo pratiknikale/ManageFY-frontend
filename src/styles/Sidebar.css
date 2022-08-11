@@ -8,7 +8,7 @@ li {
 }
 
 .Sidebar {
-  width: 18%;
+  width: 270px;
   height: 100%;
   background-color: #1d2124;
   position: fixed;
@@ -35,4 +35,15 @@ li {
 .side-menuItems:hover {
   text-decoration: none;
   color: rgb(228, 228, 228);
+}
+
+.newChatMessageBadge {
+  color: red;
+  background-color: red;
+  font-size: 6px;
+  width: 8px;
+  border-radius: 100px;
+  position: absolute;
+  margin-left: 12px;
+  margin-top: 19px;
 }
