@@ -50,6 +50,7 @@ const MessagesBox = () => {
                   margin: "5px",
                   color: "white",
                   borderRadius: "10px",
+                  maxWidth: "350px",
                   marginLeft: `${messages.sender._id === user.result._id ? "auto" : "10px"}`,
                   marginRight: `${messages.sender._id === user.result._id ? "15px" : "0px"}`,
                 }}
