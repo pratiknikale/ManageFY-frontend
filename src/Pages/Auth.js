@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from "react";
-import {Container, Button, Form, Row, Col} from "react-bootstrap";
+import {Container, Button, Form, Row, Col, Accordion, Card} from "react-bootstrap";
 import {signup, signin} from "../services/api";
 import {useNavigate} from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -89,7 +89,7 @@ const Auth = () => {
           </Row>
         </div>
         <div className="HomeLandingSignInSection">
-          <h2 className="GradientText" style={{marginTop: "35px", textAlign: "center", color: "white"}}>
+          <h2 className="GradientText" style={{marginTop: "6px", textAlign: "center", color: "white"}}>
             {isSignup ? "Employee Sign Up" : "Sign In"}
           </h2>
 
@@ -186,6 +186,42 @@ const Auth = () => {
                 : "Sign In"}
             </Button>
           </Form>
+
+          {!isSignup && (
+            <Accordion style={{marginTop: "10px"}}>
+              <Card style={{backgroundColor: "black", borderRadius: "20px"}}>
+                <Card.Header style={{display: "flex", justifyContent: "center"}}>
+                  <Accordion.Toggle
+                    as={Button}
+                    variant="dark"
+                    eventKey="1"
+                    style={{border: "hidden", width: "100%", color: "grey", borderRadius: "20px"}}
+                  >
+                    Demo Credentials
+                  </Accordion.Toggle>
+                </Card.Header>
+                <Accordion.Collapse eventKey="1">
+                  <Card.Body style={{padding: "0px 20px 0px 20px", color: "grey", fontSize: "15px"}}>
+                    <span>
+                      <b>Manager : </b>
+                    </span>
+                    <br></br>
+                    <span style={{marginLeft: "8px"}}>Email : manager@demo.com</span>
+                    <br></br>
+                    <span style={{marginLeft: "8px"}}>Pass : 123456789</span>
+                    <br></br>
+                    <span>
+                      <b>Jr. Employee : </b>
+                    </span>
+                    <br></br>
+                    <span style={{marginLeft: "8px"}}>Email : john@demo.com</span>
+                    <br></br>
+                    <span style={{marginLeft: "8px"}}>Pass : 123456789</span>
+                  </Card.Body>
+                </Accordion.Collapse>
+              </Card>
+            </Accordion>
+          )}
         </div>
       </Container>
     </>

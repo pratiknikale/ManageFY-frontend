@@ -23,23 +23,25 @@ export const assignedTaskSlice = createSlice({
       return {...state, allAssignedTasks: [payload, ...state.allAssignedTasks]};
     },
     updateEditedAssignTask: (state, {payload}) => {
-      // console.log(payload);
       const task = payload.result;
       const Index = payload.EtaskEditIndex;
 
       state.allAssignedTasks.splice(Index, 1);
       state.allAssignedTasks.splice(Index, 0, task);
     },
+    allAssignedTasksOnSearch: (state, {payload}) => {
+      state.allAssignedTasks = payload;
+    },
   },
   extraReducers: {
     [fetchallAssignedTasks.fulfilled]: (state, {payload}) => {
-      console.log("all assigned tasks fetch successfully");
       state.allAssignedTasks = payload;
       state.allAssignedTasksFetched = true;
     },
   },
 });
 
-export const {setAllAssignedTasksFetched, addNewAssignedTask, updateEditedAssignTask} = assignedTaskSlice.actions;
+export const {setAllAssignedTasksFetched, addNewAssignedTask, updateEditedAssignTask, allAssignedTasksOnSearch} =
+  assignedTaskSlice.actions;
 
 export default assignedTaskSlice.reducer;

@@ -29,9 +29,9 @@ const Sidebar = () => {
   const allChatsFetched = useSelector((state) => state.chat.allChatsFetched);
   const notificationChatIds = useSelector((state) => state.chat.notificationChatIds);
 
-  const SelectedChatRef = React.useRef(selectedChat);
-  const FilteredChatsRef = React.useRef(filteredChats);
-  const allChatsFetchedRef = React.useRef(allChatsFetched);
+  const SelectedChatRef = useRef(selectedChat);
+  const FilteredChatsRef = useRef(filteredChats);
+  const allChatsFetchedRef = useRef(allChatsFetched);
   React.useEffect(() => {
     SelectedChatRef.current = selectedChat;
     FilteredChatsRef.current = filteredChats;
@@ -57,6 +57,7 @@ const Sidebar = () => {
           return chat._id !== filChat._id;
         });
         dispatch(resetSortAllChats({selectedChat: chat, popedSelectedChatArray: popedSelectedChatArray}));
+        newMessageWindowNotification(message);
       }
     }
   };
@@ -72,7 +73,7 @@ const Sidebar = () => {
 
   // chat related socket implimentation
   useEffect(() => {
-    user && socket && socket.emit("setup", user.result._id);
+    socket && socket.emit("setup", user.result._id);
 
     const newMsghandler = (message, chat) => {
       messageReceiveHandler(
@@ -100,7 +101,7 @@ const Sidebar = () => {
     });
 
     socket.on("new-group-edited", grpEditHandler);
-  }, [user, socket]);
+  }, []);
 
   // fetching all my chats, setting chat notifications and saving in redux state
   useEffect(() => {
@@ -134,6 +135,27 @@ const Sidebar = () => {
   useEffect(() => {
     user.result && dispatch(fetchallOrgUsers(user.result._id));
   }, [user]);
+
+  useEffect(() => {
+    notifyMe();
+  }, []);
+
+  const newMessageWindowNotification = (message) => {
+    const options = {
+      body: message.content,
+      renotify: false,
+      silent: true,
+    };
+    new Notification(`New Message from ${message.sender.firstName} : `, options); //window puch notification
+  };
+
+  const notifyMe = () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support desktop notification");
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  };
 
   return (
     <div className="Sidebar">

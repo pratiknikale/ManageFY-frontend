@@ -113,6 +113,10 @@ export const searchAllUser = async (value) => {
   return await API.get(`/UserEdit/searchAllUser?search=${value}`);
 };
 
+export const SearchAssignedTask = async (SearchValue) => {
+  return await API.get(`/api/searchAssignedTask?search=${SearchValue}`);
+};
+
 export const GetChats = async () => {
   return await API.get("/Chat/");
 };
@@ -154,6 +158,5 @@ export const setChatMessageRead = async (chatId, userId, timeStampUpdate) => {
 };
 
 export const getmanagersAssignedTsk = async (Id) => {
-  console.log(Id);
   return await API.get(`/api/getmanagersAssignedTsk/${Id}`);
 };

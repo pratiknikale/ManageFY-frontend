@@ -1,7 +1,6 @@
 import {useState, useEffect} from "react";
 import {managerSignup, getManagerList, getEditUser, EditUser, DeleteUser, SearchUser} from "../services/api";
-import {Button, Container, Form, Table, FormControl, Row, Col, Modal} from "react-bootstrap";
-import {useNavigate} from "react-router-dom";
+import {Button, Container, Form, Table, FormControl, Row, Col} from "react-bootstrap";
 import ClipLoader from "react-spinners/ClipLoader";
 import {css} from "@emotion/react";
 import UserEdit from "../mycomponents/UserEdit";
@@ -27,15 +26,14 @@ const btnoverride = css`
 `;
 
 const ManageManager = () => {
-  const navigate = useNavigate();
   const [MFormData, setMFormData] = useState(defaultFormFields);
-  // const [search, setSearch] = useState("");
   const [isNewManagerLoadingBtn, setIsNewManagerLoadingBtn] = useState(false);
   const [isNewManagerLoadingList, setIsNewManagerLoadingList] = useState(true);
   const [managerList, setManagerList] = useState([]);
   const [show, setShow] = useState(false);
   const [editUser, setEditUser] = useState(initialUserEditValue);
   const [saveEditUserLoading, setSaveEditUserLoading] = useState(false);
+  const [SearchField, setSearchField] = useState(false);
 
   useEffect(() => {
     getAllManagerList().then(() => {
@@ -47,28 +45,15 @@ const ManageManager = () => {
 
   const getAllManagerList = async () => {
     const {data} = await getManagerList();
-    // const revData = response.data.reverse();
     setManagerList(data);
-    // console.log(response.status);
   };
 
   const onFieldChange = (e) => {
     setMFormData({...MFormData, [e.target.name]: e.target.value});
-    // console.log(MFormData);
-  };
-
-  const onSearchChange = async (e) => {
-    const search = e.target.value;
-    const SearchRole = e.target.name;
-    // setSearch(e.target.value);
-    const {data} = await SearchUser(search, SearchRole);
-    setManagerList(data);
-    // console.log(data);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(MFormData);
     setIsNewManagerLoadingBtn(true);
     managerSignup(MFormData).then(() => {
       setIsNewManagerLoadingBtn(false);
@@ -89,13 +74,11 @@ const ManageManager = () => {
     const response = await getEditUser(id);
 
     setEditUser(response.data);
-    // console.log(response.data);
     setShow(true);
   };
 
   const onUserEditChange = (e) => {
     e.preventDefault();
-
     setEditUser({...editUser, [e.target.name]: e.target.value});
   };
 
@@ -113,18 +96,29 @@ const ManageManager = () => {
   const deleteUser = async (id, i) => {
     var answer = window.confirm("Are you sure? All the data for selected user will be deleted");
     if (answer) {
-      // let isDelloading = delTaskLoading.slice();
-      // isDelloading[i] = true;
-      // setDelTaskLoading(isDelloading);
       await DeleteUser(id).then(async (result) => {
         getAllManagerList().then(() => {
           getAllManagerList();
-          //   let isDelloading = delTaskLoading.slice();
-          //   isDelloading[i] = false;
-          //   setDelTaskLoading(isDelloading);
         });
       });
     }
+  };
+
+  const onSearchChange = async (e) => {
+    const searchValue = e.target.value;
+    searchValue.length > 0 ? setSearchField(true) : setSearchField(false);
+    const SearchRole = e.target.name;
+    const {data} = await SearchUser(searchValue, SearchRole);
+    setManagerList(data);
+  };
+
+  const RestoreSearchResults = async () => {
+    let SearchField = document.getElementById("SearchField");
+    let SearchFieldName = document.getElementById("SearchField").name;
+    SearchField.value = "";
+    setSearchField(false);
+    const {data} = await SearchUser("", SearchFieldName);
+    setManagerList(data);
   };
   return (
     <>
@@ -132,39 +126,45 @@ const ManageManager = () => {
         Managers Section
       </h4>
 
-      {/* <hr
-  style={{
-    backgroundColor: "white",
-    marginBottom: "40px",
-    width: "70%",
-    border: "0",
-    height: "1px",
-    backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))",
-  }}
-/> */}
-      <Container style={{marginBottom: "170px"}}>
+      <Container fluid style={{marginBottom: "170px", paddingLeft: "65px", paddingRight: "65px", flex: "1 0 auto"}}>
         <div className="my-2">
           <Form inline style={{display: "inline-flex"}}>
             <FormControl
               onChange={(e) => onSearchChange(e)}
+              id="SearchField"
+              name="manager"
               type="text"
               placeholder="Search"
-              style={{width: "400px"}}
+              style={{
+                width: "400px",
+                borderRadius: "20px",
+                backgroundColor: "#343a40",
+                borderStyle: "hidden",
+                color: "white",
+              }}
               className="mr-sm-2"
-              name="manager"
               autoComplete="off"
             />
-            {/* <Button variant="outline-success">Search</Button> */}
+            {SearchField && (
+              <span
+                id="clearSearch"
+                style={{color: "grey", cursor: "pointer", marginLeft: "-36px"}}
+                onClick={() => RestoreSearchResults()}
+              >
+                <b>X</b>
+              </span>
+            )}
           </Form>
-          <Button className="float-right" variant="outline-light">
+          {/* <Button className="float-right" variant="outline-light">
             Create new manager profile
-          </Button>{" "}
+          </Button>{" "} */}
         </div>
         <Table bordered hover variant="dark">
           <thead>
             <tr>
               <th style={{width: "12%"}}>#</th>
-              <th style={{width: "58%"}}>Manager Name</th>
+              <th style={{width: "38%"}}>Manager Name</th>
+              <th style={{width: "28%"}}>Role</th>
               <th style={{width: "32%"}}>Action</th>
             </tr>
           </thead>
@@ -189,6 +189,7 @@ const ManageManager = () => {
                     <td>
                       {MList.firstName} {MList.lastName}
                     </td>
+                    <td>{MList.role}</td>
                     <td>
                       <Button
                         className="float-right mx-2"

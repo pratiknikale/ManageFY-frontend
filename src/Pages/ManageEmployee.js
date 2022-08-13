@@ -1,6 +1,6 @@
 import {useState, useEffect} from "react";
 import {Button, Container, Form, Table, FormControl, Modal} from "react-bootstrap";
-import {useNavigate} from "react-router-dom";
+// import {useNavigate} from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
 import {getEmployeeList, getEditUser, EditUser, DeleteUser, SearchUser} from "../services/api";
 import {css} from "@emotion/react";
@@ -19,16 +19,13 @@ const initialUserEditValue = {
 };
 
 const ManageEmployee = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [isNewEmployeeLoadingList, setIsNewEmployeeLoadingList] = useState(true);
   const [employeeList, setEmployeeList] = useState([]);
   const [saveEditUserLoading, setSaveEditUserLoading] = useState(false);
   const [editUser, setEditUser] = useState(initialUserEditValue);
   const [show, setShow] = useState(false);
-  const [AssShow, setAssShow] = useState(false);
-
-  const handleAssignmentClose = () => setAssShow(false);
-  const handleAssignmentShow = () => setAssShow(true);
+  const [SearchField, setSearchField] = useState(false);
 
   useEffect(() => {
     getAllEmployeeList().then(() => {
@@ -75,25 +72,27 @@ const ManageEmployee = () => {
   const deleteUser = async (id, i) => {
     var answer = window.confirm("Are you sure? All the data for selected user will also be deleted");
     if (answer) {
-      // let isDelloading = delTaskLoading.slice();
-      // isDelloading[i] = true;
-      // setDelTaskLoading(isDelloading);
       await DeleteUser(id).then(() => {
         getAllEmployeeList();
-        //   let isDelloading = delTaskLoading.slice();
-        //   isDelloading[i] = false;
-        //   setDelTaskLoading(isDelloading);
       });
     }
   };
 
   const onSearchChange = async (e) => {
-    const search = e.target.value;
+    const searchValue = e.target.value;
+    searchValue.length > 0 ? setSearchField(true) : setSearchField(false);
     const SearchRole = e.target.name;
-    // setSearch(e.target.value);
-    const {data} = await SearchUser(search, SearchRole);
+    const {data} = await SearchUser(searchValue, SearchRole);
     setEmployeeList(data);
-    // console.log(data);
+  };
+
+  const RestoreSearchResults = async () => {
+    let SearchField = document.getElementById("SearchField");
+    let SearchFieldName = document.getElementById("SearchField").name;
+    SearchField.value = "";
+    setSearchField(false);
+    const {data} = await SearchUser("", SearchFieldName);
+    setEmployeeList(data);
   };
 
   return (
@@ -102,38 +101,45 @@ const ManageEmployee = () => {
         Employee Management Section
       </h4>
 
-      {/* <hr
-  style={{
-    backgroundColor: "white",
-    marginBottom: "40px",
-    width: "70%",
-    border: "0",
-    height: "1px",
-    backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))",
-  }}
-/> */}
-      <Container style={{marginBottom: "170px", flex: "1 0 auto"}}>
+      <Container fluid style={{marginBottom: "170px", paddingLeft: "65px", paddingRight: "65px", flex: "1 0 auto"}}>
         <div className="my-2">
           <Form inline style={{display: "inline-flex"}}>
             <FormControl
               onChange={(e) => onSearchChange(e)}
+              id="SearchField"
               name="employee"
               type="text"
               placeholder="Search"
-              style={{width: "400px"}}
+              style={{
+                width: "400px",
+                borderRadius: "20px",
+                backgroundColor: "#343a40",
+                borderStyle: "hidden",
+                color: "white",
+              }}
               className="mr-sm-2"
               autoComplete="off"
             />
+            {SearchField && (
+              <span
+                id="clearSearch"
+                style={{color: "grey", cursor: "pointer", marginLeft: "-36px"}}
+                onClick={() => RestoreSearchResults()}
+              >
+                <b>X</b>
+              </span>
+            )}
           </Form>
-          <Button className="float-right" variant="outline-light">
+          {/* <Button className="float-right" variant="outline-light">
             Create new employee profile
-          </Button>{" "}
+          </Button>{" "} */}
         </div>
         <Table bordered hover variant="dark">
           <thead>
             <tr>
               <th style={{width: "12%"}}>#</th>
-              <th style={{width: "58%"}}>Employee Name</th>
+              <th style={{width: "38%"}}>Employee Name</th>
+              <th style={{width: "20%"}}>Role</th>
               <th style={{width: "32%"}}>Action</th>
             </tr>
           </thead>
@@ -158,6 +164,7 @@ const ManageEmployee = () => {
                     <td>
                       {EList.firstName} {EList.lastName}
                     </td>
+                    <td>{EList.role}</td>
                     <td>
                       <Button
                         className="float-right mx-2"
@@ -168,9 +175,6 @@ const ManageEmployee = () => {
                       </Button>
                       <Button className="float-right mx-2" variant="primary" onClick={() => handleShow(EList._id)}>
                         <i className="far fa-edit"></i>
-                      </Button>
-                      <Button className="float-right mx-2" variant="light" onClick={handleAssignmentShow}>
-                        Assign Task
                       </Button>
                     </td>
                   </tr>
@@ -189,21 +193,6 @@ const ManageEmployee = () => {
           editUser={editUser}
           saveEditUserLoading={saveEditUserLoading}
         />
-
-        <Modal show={AssShow} onHide={handleAssignmentClose} centered size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>Assigning task to XYZ</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleAssignmentClose}>
-              Close
-            </Button>
-            <Button variant="primary" onClick={handleAssignmentClose}>
-              Save Changes
-            </Button>
-          </Modal.Footer>
-        </Modal>
       </Container>
     </>
   );

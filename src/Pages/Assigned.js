@@ -1,11 +1,9 @@
 import {useState, useEffect} from "react";
 import {Button, Container, Form, Table, FormControl, Modal} from "react-bootstrap";
-import {useNavigate} from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
-import {getEmployeeList, getEditUser, EditUser, DeleteUser, getEdit} from "../services/api";
+import {getEdit, SearchAssignedTask} from "../services/api";
 import {css} from "@emotion/react";
-import UserEdit from "../mycomponents/UserEdit";
-import {fetchallAssignedTasks, setAllAssignedTasksFetched} from "../features/assignedTasks/assignedTaskSlice";
+import {fetchallAssignedTasks, allAssignedTasksOnSearch} from "../features/assignedTasks/assignedTaskSlice";
 import {useSelector, useDispatch} from "react-redux";
 import NewTaskForm from "../mycomponents/myTask-ass/NewTaskForm";
 import TaskEditForm from "../mycomponents/myTask-ass/TaskEditForm";
@@ -36,13 +34,14 @@ const Assigned = () => {
 
   const user = useSelector((state) => state.user.user);
   const allAssignedTasks = useSelector((state) => state.assignedTask.allAssignedTasks);
-  const allAssignedTasksFetched = useSelector((state) => state.assignedTask.allAssignedTasksFetched);
+  // const allAssignedTasksFetched = useSelector((state) => state.assignedTask.allAssignedTasksFetched);
 
   const [taskAssignModalShow, setTaskAssignModalShow] = useState(false); // modal asign task hide/show
   const [show, setShow] = useState(false); // Edit model hide/show
   const [editID, setEditID] = useState(""); // setting task id to edit
   const [Etask, setETask] = useState(initialEditValue); // edit task form values
   const [EtaskEditIndex, setEtaskEditIndex] = useState();
+  const [SearchField, setSearchField] = useState(false);
 
   // loader
   const [viewEditLoader, setViewEditLoader] = useState(false);
@@ -75,15 +74,31 @@ const Assigned = () => {
     setShow(false);
   };
 
+  const onAssignedTaskSearchChange = async (e) => {
+    const searchValue = e.target.value;
+    searchValue.length > 0 ? setSearchField(true) : setSearchField(false);
+    const {data} = await SearchAssignedTask(searchValue);
+    dispatch(allAssignedTasksOnSearch(data));
+  };
+
+  const RestoreSearchResults = async () => {
+    let SearchField = document.getElementById("SearchField");
+    SearchField.value = "";
+    setSearchField(false);
+    const {data} = await SearchAssignedTask("");
+    dispatch(allAssignedTasksOnSearch(data));
+  };
+
   return (
     <>
       <h4 style={{marginTop: "25px", marginBottom: "25px", marginLeft: "25px", color: "white"}}>Assigned Tasks</h4>
 
-      <Container style={{marginBottom: "170px", flex: "1 0 auto"}}>
+      <Container fluid style={{marginBottom: "170px", paddingLeft: "65px", paddingRight: "65px", flex: "1 0 auto"}}>
         <Form inline style={{display: "inline-flex", paddingBottom: "12px"}}>
           <FormControl
-            // onChange={(e) => onSearchChange(e)}
-            name="employee"
+            onChange={(e) => onAssignedTaskSearchChange(e)}
+            id="SearchField"
+            name="assignedTask"
             type="text"
             placeholder="Search by Task, Assigned to or Status"
             style={{
@@ -96,6 +111,15 @@ const Assigned = () => {
             className="mr-sm-2"
             autoComplete="off"
           />
+          {SearchField && (
+            <span
+              id="clearSearch"
+              style={{color: "grey", cursor: "pointer", marginLeft: "-36px"}}
+              onClick={() => RestoreSearchResults()}
+            >
+              <b>X</b>
+            </span>
+          )}
         </Form>
         <Button
           onClick={() => setTaskAssignModalShow(true)}

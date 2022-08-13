@@ -11,7 +11,7 @@ import Chats from "./Pages/Chats";
 import ProtectedRoute from "./mycomponents/protectedRoutes";
 import ProtectedManagerRoute from "./mycomponents/ProtectedManagerRoute";
 import {BrowserRouter, Routes, Route} from "react-router-dom";
-import {useState, createContext, useEffect} from "react";
+import {useState, createContext} from "react";
 import {useSelector} from "react-redux";
 import Settings from "./Pages/Settings";
 import Footer from "./mycomponents/Footer";
@@ -33,7 +33,7 @@ const App = () => {
       <BrowserRouter>
         <Header />
         <SocketContext.Provider value={socket}>
-          {user.result && <Sidebar />}
+          {user.result && socket && <Sidebar />}
           <div className={user.result ? "mainContainer" : "notLoggedMainContainer"}>
             <Routes>
               <Route exact path="/" element={<Auth />} />
